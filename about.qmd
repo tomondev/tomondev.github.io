@@ -2,7 +2,7 @@
 title: "About"
 # image: profile.jpg
 about:
-  template: jolla
+  template: solana
   # links:
   #   - icon: twitter
   #     text: Twitter
@@ -16,4 +16,6 @@ about:
 
 ---
 
-Just some notes and code.
+My name is Tom. I write small examples on various interesting topics. 
+
+If you find mistakes in my posts (which is very likely), please file [issues](https://github.com/tomondev/tomondev.github.io/issues).

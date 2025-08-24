@@ -3,7 +3,12 @@ project:
 
 website:
   title: "On Notes"
-  # navbar:
+  navbar:
+    left:
+      # - text: "Home"
+      #   href: index.qmd
+      - text: "About"
+        href: about.qmd
   #   right:
   #     - about.qmd
       # - icon: github
@@ -12,10 +17,16 @@ website:
       #   href: https://twitter.com
 format:
   html:
-    theme:
-      - cosmo
-      - brand
-    css: styles.css
+    execute: false
+    code-fold: true
+    code-summary: "Show the code"
+    code-block-border-left: "#31BAE9"
+    code-line-numbers: true
+    code-link: true
+    # theme:
+    #   - cosmo
+    #   - brand
+    # css: styles.css
 
 
 

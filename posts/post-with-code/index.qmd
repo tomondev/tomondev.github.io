@@ -1,11 +1,6 @@
 ---
-title: "A Toy Diffusion Model"
-date: "2025-06-27"
+title: "Post 1"
+date: 2020-01-01
 ---
 
-This is a post with executable code.
-
-$x$
-
-$xxx\int^2$
-
+TESTSSDF TESTSSDFTESTSSDFTESTSSDFTESTSSDFTESTSSDF
