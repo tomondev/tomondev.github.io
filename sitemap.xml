@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://tomondev.github.io/about.html</loc>
-    <lastmod>2025-06-28T01:04:15.285Z</lastmod>
-  </url>
-  <url>
-    <loc>https://tomondev.github.io/posts/post-with-code/index.html</loc>
-    <lastmod>2025-06-28T01:04:15.286Z</lastmod>
+    <loc>https://tomondev.github.io/index.html</loc>
+    <lastmod>2025-08-24T20:14:06.849Z</lastmod>
   </url>
   <url>
     <loc>https://tomondev.github.io/posts/colab/index.html</loc>
-    <lastmod>2025-06-28T01:04:15.286Z</lastmod>
+    <lastmod>2025-08-24T20:14:06.897Z</lastmod>
   </url>
   <url>
-    <loc>https://tomondev.github.io/index.html</loc>
-    <lastmod>2025-06-28T01:04:15.285Z</lastmod>
+    <loc>https://tomondev.github.io/posts/post-with-code/index.html</loc>
+    <lastmod>2025-08-24T20:14:06.897Z</lastmod>
+  </url>
+  <url>
+    <loc>https://tomondev.github.io/about.html</loc>
+    <lastmod>2025-08-24T20:14:06.849Z</lastmod>
   </url>
 </urlset>
