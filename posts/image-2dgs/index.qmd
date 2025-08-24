@@ -1,0 +1,137 @@
+---
+title: "A Toy Example of 2D Gaussian Splatting in JAX"
+date: 2025-08-01
+---
+
+[3D Gaussian Splatting](https://huggingface.co/blog/gaussian-splatting) (3DGS) is a rendering technique for creating photorealistic scenes. In this post, we will create a toy example of 2D Gaussian splatting(2DGS). We will train a 2DGS model to render a small image. This 2D version strips away a lot of the complexity found in 3DGS, making the core ideas much easier to understand.
+
+1. A single image is sufficient to train a 2DGS model, unlike 3DGS which often requires multiple views.
+2. 2DGS does not require handling camera poses or parameters.
+3. In 2DGS, a single color is assigned to each Gaussian, whereas 3DGS uses spherical harmonics to model view-dependent appearance.
+4. For 2DGS, pixel colors are determined by a simple weighted average of Gaussian colors, eliminating the need for depth ordering or opacity attributes which are required in 3DGS's alpha-blended rendering.
+
+
+## Problem Formulation
+A 2D Gaussian has a mean vector $\mu\in\mathbb{R}^2$ and a covariance matrix $\Sigma\in\mathbb{R}^{2 \times 2}$. The density is expressed as
+$$
+G(x)=\exp\left(-\dfrac{1}{2}(x-\mu)^T\Sigma^{-1}(x-\mu)\right)
+$$
+where $x$ is the pixel location. Note that this is not a probaility density so it doesn't need to be normalized.
+
+Usually people use $\Sigma=RSS^TR^T$ to make sure $\Sigma$ is always positive semi-definite during training. $R\in\mathbb{R}^{2\times2}$ is a rotation matrix and $S\in\mathbb{R}^{2\times2}$ is a scaling matrix. $R$ is parameterized by an angle $\theta\in[0,\pi]$ and $S$ is determined by a scaling vector $s\in\mathbb{R}^2_+$.
+
+Last, we need to assign a color to each Gaussian. Unlike 3DGS which uses spherical harmonics, we only need a vector $c\in\mathbb{R}^3$ to represent RGB values of a 2D Gaussian.
+
+To summarize, each 2D Gaussian primitive is characterized by $(\mu, \theta, s, c)$. Each pixel value is determined by a weighted average of all the Gaussians:
+$$
+P(x)=\dfrac{1}{\sum_i G_i(x)}\sum_i G_i(x)c_i
+$$
+
+## Target Image
+
+Here is our target image with a size of 128x128.
+
+![input](input.jpg)
+
+## Implementation
+
+First, we randomly initialize all the Gaussian parameters. We use a total of 5000 Gaussians. Using more Gaussians improves quality but also increases memory usage.
+
+```python
+initial_gs_num = 5000
+mu_array = jnp.array(np.random.rand(initial_gs_num, 2))
+theta_array = jnp.array(
+    np.random.rand(initial_gs_num, 1) * np.pi
+)  # between 0 and pi
+scaling_array = jnp.array(np.random.rand(initial_gs_num, 2) * 0.1)
+color_array = jnp.array(np.random.rand(initial_gs_num, 3) * 255)
+```
+
+Next, we implement the key part of the training code: a function to compute the Gaussian density. We will implement the function for computing the density of a single Gaussian at a single pixel location. We then use three layers of `jax.vmap` to vectorize the function, allowing a single call to compute the density for all Gaussians at all locations.
+
+```python
+@partial(jax.vmap, in_axes=(None, None, None, 0))  # map over height dimension
+@partial(jax.vmap, in_axes=(None, None, None, 0))  # map over width dimension
+@partial(jax.vmap, in_axes=(0, 0, 0, None))  # map over gaussians
+def compute_gaussians(mu, theta, scaling, coord):
+    """Compute the value of a single Gaussian at the given coordinate."""
+    # rotation matrix
+    # clip theta to the range [0, pi]
+    theta = jnp.clip(theta, 0.0, jnp.pi)
+    c = jnp.cos(theta[0])
+    s = jnp.sin(theta[0])
+    R = jnp.array([[c, -s], [s, c]])
+    # scaling matrix
+    # clip scaling to be positive
+    scaling = jnp.clip(scaling, min=1e-6, max=None)
+    S = jnp.diag(scaling)
+    # covariance matrix
+    # add small value for numerical stability
+    Sigma = R @ S @ S @ R.T + 1e-6 * jnp.eye(2)
+    diff = coord - mu
+    exponent = -0.5 * diff @ jnp.linalg.inv(Sigma) @ diff.T
+    return jnp.exp(exponent)
+```    
+
+With `compute_gaussians` implemented, it is easy to finish the rendering function. It basically computes a weighted average of all Gaussian colors for pixel. `@jax.jit` is needed to compile and accelerate the rendering call.
+
+```python
+@jax.jit
+def render_image(mu_array, theta_array, scaling_array, color_array, coords):
+    """Render the image from the parameters."""
+    gaussians = compute_gaussians(mu_array, theta_array, scaling_array, coords)
+    # weighted average of gaussians
+    rendered_image = jnp.matmul(gaussians, color_array) / (
+        jnp.sum(gaussians, axis=-1, keepdims=True) + 1e-6
+    )
+    rendered_image = jnp.clip(rendered_image, 0, 255)
+    return rendered_image
+```
+
+Now it is straight forward to implement the training loop in the `main` function.
+
+```python
+_SIZE = 128
+_ITERATIONS = 2000
+_GS_INITIAL_NUM = 5000
+
+def main():
+    img = Image.open("input.jpg")
+    img_array = np.array(img)
+    initial_gs_num = _GS_INITIAL_NUM
+    mu_array = jnp.array(np.random.rand(initial_gs_num, 2))
+    theta_array = jnp.array(
+        np.random.rand(initial_gs_num, 1) * np.pi
+    )  # between 0 and pi
+    scaling_array = jnp.array(np.random.rand(initial_gs_num, 2) * 0.1)
+    color_array = jnp.array(np.random.rand(initial_gs_num, 3) * 255)  # 8bit RGB color
+
+    # create a grid of x, y coordinates
+    x = jnp.linspace(0, 1, _SIZE, dtype=jnp.float16)
+    y = jnp.linspace(0, 1, _SIZE, dtype=jnp.float16)
+    xx, yy = jnp.meshgrid(x, y)
+    coords = jnp.stack([xx, yy], axis=-1)  # shape (_SIZE, _SIZE, 2)
+
+    learning_rate = 0.001
+    optimizer = optax.adam(learning_rate)
+    params = (mu_array, theta_array, scaling_array, color_array)
+    opt_state = optimizer.init(params)
+
+    def loss_fn(params):
+        rendered = render_image(
+            *params,
+            coords,
+        )
+        return jnp.mean(jnp.abs(rendered - img_array))
+
+    def update(params, opt_state):
+        grads = jax.grad(loss_fn)(params)
+        updates, opt_state = optimizer.update(grads, opt_state)
+        new_params = optax.apply_updates(params, updates)
+        return new_params, opt_state
+
+    for i in range(_ITERATIONS):
+        params, opt_state = update(params, opt_state)
+        current_loss = loss_fn(params)
+```
+
