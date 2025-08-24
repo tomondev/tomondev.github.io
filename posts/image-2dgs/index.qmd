@@ -3,24 +3,23 @@ title: "A Toy Example of 2D Gaussian Splatting in JAX"
 date: 2025-08-01
 ---
 
-[3D Gaussian Splatting](https://huggingface.co/blog/gaussian-splatting) (3DGS) is a rendering technique for creating photorealistic scenes. In this post, we will create a toy example of 2D Gaussian splatting(2DGS). We will train a 2DGS model to render a small image. This 2D version strips away a lot of the complexity found in 3DGS, making the core ideas much easier to understand.
+[3D Gaussian Splatting](https://huggingface.co/blog/gaussian-splatting) (3DGS) is a rendering technique for creating photorealistic scenes. In this post, we will create a toy example of 2D Gaussian splatting (2DGS). We will train a 2DGS model to render a small image. This 2D version strips away much of the complexity found in 3DGS, making the core ideas much easier to understand.
 
-1. A single image is sufficient to train a 2DGS model, unlike 3DGS which often requires multiple views.
+1. A single image is sufficient to train a 2DGS model, unlike 3DGS, which often requires multiple views.
 2. 2DGS does not require handling camera poses or parameters.
 3. In 2DGS, a single color is assigned to each Gaussian, whereas 3DGS uses spherical harmonics to model view-dependent appearance.
-4. For 2DGS, pixel colors are determined by a simple weighted average of Gaussian colors, eliminating the need for depth ordering or opacity attributes which are required in 3DGS's alpha-blended rendering.
-
+4. For 2DGS, pixel colors are determined by a simple weighted average of Gaussian colors, eliminating the need for depth ordering or opacity attributes, which are required in 3DGS's alpha-blended rendering.
 
 ## Problem Formulation
 A 2D Gaussian has a mean vector $\mu\in\mathbb{R}^2$ and a covariance matrix $\Sigma\in\mathbb{R}^{2 \times 2}$. The density is expressed as
 $$
 G(x)=\exp\left(-\dfrac{1}{2}(x-\mu)^T\Sigma^{-1}(x-\mu)\right)
 $$
-where $x$ is the pixel location. Note that this is not a probaility density so it doesn't need to be normalized.
+where $x$ is the pixel location. Note that this is not a probability density, so it doesn't need to be normalized.
 
-Usually people use $\Sigma=RSS^TR^T$ to make sure $\Sigma$ is always positive semi-definite during training. $R\in\mathbb{R}^{2\times2}$ is a rotation matrix and $S\in\mathbb{R}^{2\times2}$ is a scaling matrix. $R$ is parameterized by an angle $\theta\in[0,\pi]$ and $S$ is determined by a scaling vector $s\in\mathbb{R}^2_+$.
+Usually, people use $\Sigma=RSS^TR^T$ to ensure $\Sigma$ is always positive semi-definite during training. $R\in\mathbb{R}^{2\times2}$ is a rotation matrix, and $S\in\mathbb{R}^{2\times2}$ is a scaling matrix. $R$ is parameterized by an angle $\theta\in[0,\pi]$, and $S$ is determined by a scaling vector $s\in\mathbb{R}^2_+$.
 
-Last, we need to assign a color to each Gaussian. Unlike 3DGS which uses spherical harmonics, we only need a vector $c\in\mathbb{R}^3$ to represent RGB values of a 2D Gaussian.
+Lastly, we need to assign a color to each Gaussian. Unlike 3DGS, which uses spherical harmonics, we only need a vector $c\in\mathbb{R}^3$ to represent the RGB values of a 2D Gaussian.
 
 To summarize, each 2D Gaussian primitive is characterized by $(\mu, \theta, s, c)$. Each pixel value is determined by a weighted average of all the Gaussians:
 $$
@@ -73,7 +72,7 @@ def compute_gaussians(mu, theta, scaling, coord):
     return jnp.exp(exponent)
 ```    
 
-With `compute_gaussians` implemented, it is easy to finish the rendering function. It basically computes a weighted average of all Gaussian colors for pixel. `@jax.jit` is needed to compile and accelerate the rendering call.
+With `compute_gaussians` implemented, it is easy to finish the rendering function. It basically computes a weighted average of all Gaussian colors for each pixel. `@jax.jit` is needed to compile and accelerate the rendering call.
 
 ```python
 @jax.jit
@@ -88,7 +87,7 @@ def render_image(mu_array, theta_array, scaling_array, color_array, coords):
     return rendered_image
 ```
 
-Now it is straight forward to implement the training loop in the `main` function.
+Now it is straightforward to implement the training loop in the `main` function.
 
 ```python
 _SIZE = 128
@@ -134,4 +133,3 @@ def main():
         params, opt_state = update(params, opt_state)
         current_loss = loss_fn(params)
 ```
-
