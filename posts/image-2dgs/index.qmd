@@ -1,6 +1,7 @@
 ---
 title: "A Toy Example of 2D Gaussian Splatting in JAX"
 date: 2025-08-01
+author: Tom
 ---
 
 [3D Gaussian Splatting](https://huggingface.co/blog/gaussian-splatting) (3DGS) is a rendering technique for photorealistic view synthesis. In this post, we will create a toy example of 2D Gaussian splatting (2DGS). We will train a 2DGS model to render a small image. This 2D version strips away much of the complexity found in 3DGS, making the core ideas much easier to understand.
