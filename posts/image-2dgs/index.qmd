@@ -88,11 +88,10 @@ def render_image(mu_array, theta_array, scaling_array, color_array, coords):
     rendered_image = jnp.matmul(gaussians, color_array) / (
         jnp.sum(gaussians, axis=-1, keepdims=True) + 1e-6
     )
-    rendered_image = jnp.clip(rendered_image, 0, 255)
-    return rendered_image
+    return jnp.clip(rendered_image, 0, 255)
 ```
 
-`render_image` was implemented in a differentiable way. We can compute the loss by comparing the reconstructed image against the target image. Either $L_1$ loss or MSE will work. It is now straightforward to implement the training loop in the `main` function. We can summarize the training code as follows:
+`render_image` is implemented in a differentiable way. We can compute the loss by comparing the reconstructed image against the target image. Either $L_1$ loss or MSE will work. It is now straightforward to implement the training loop in the `main` function. We can summarize the training code as follows:
 
 - Initialize the gaussians
 - loop
