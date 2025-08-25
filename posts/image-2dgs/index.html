@@ -272,9 +272,8 @@ G(x)=\exp\left(-\dfrac{1}{2}(x-\mu)^T\Sigma^{-1}(x-\mu)\right)
 <span id="cb3-6"><a href="#cb3-6"></a>    rendered_image <span class="op">=</span> jnp.matmul(gaussians, color_array) <span class="op">/</span> (</span>
 <span id="cb3-7"><a href="#cb3-7"></a>        jnp.<span class="bu">sum</span>(gaussians, axis<span class="op">=-</span><span class="dv">1</span>, keepdims<span class="op">=</span><span class="va">True</span>) <span class="op">+</span> <span class="fl">1e-6</span></span>
 <span id="cb3-8"><a href="#cb3-8"></a>    )</span>
-<span id="cb3-9"><a href="#cb3-9"></a>    rendered_image <span class="op">=</span> jnp.clip(rendered_image, <span class="dv">0</span>, <span class="dv">255</span>)</span>
-<span id="cb3-10"><a href="#cb3-10"></a>    <span class="cf">return</span> rendered_image</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p><code>render_image</code> was implemented in a differentiable way. We can compute the loss by comparing the reconstructed image against the target image. Either <span class="math inline">\(L_1\)</span> loss or MSE will work. It is now straightforward to implement the training loop in the <code>main</code> function. We can summarize the training code as follows:</p>
+<span id="cb3-9"><a href="#cb3-9"></a>    <span class="cf">return</span> jnp.clip(rendered_image, <span class="dv">0</span>, <span class="dv">255</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p><code>render_image</code> is implemented in a differentiable way. We can compute the loss by comparing the reconstructed image against the target image. Either <span class="math inline">\(L_1\)</span> loss or MSE will work. It is now straightforward to implement the training loop in the <code>main</code> function. We can summarize the training code as follows:</p>
 <ul>
 <li>Initialize the gaussians</li>
 <li>loop
