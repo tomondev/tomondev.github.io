@@ -3,12 +3,14 @@ title: "A Toy Example of 2D Gaussian Splatting in JAX"
 date: 2025-08-01
 ---
 
-[3D Gaussian Splatting](https://huggingface.co/blog/gaussian-splatting) (3DGS) is a rendering technique for creating photorealistic scenes. In this post, we will create a toy example of 2D Gaussian splatting (2DGS). We will train a 2DGS model to render a small image. This 2D version strips away much of the complexity found in 3DGS, making the core ideas much easier to understand.
+[3D Gaussian Splatting](https://huggingface.co/blog/gaussian-splatting) (3DGS) is a rendering technique for photorealistic view synthesis. In this post, we will create a toy example of 2D Gaussian splatting (2DGS). We will train a 2DGS model to render a small image. This 2D version strips away much of the complexity found in 3DGS, making the core ideas much easier to understand.
 
-1. A single image is sufficient to train a 2DGS model, unlike 3DGS, which often requires multiple views.
-2. 2DGS does not require handling camera poses or parameters.
-3. In 2DGS, a single color is assigned to each Gaussian, whereas 3DGS uses spherical harmonics to model view-dependent appearance.
-4. For 2DGS, pixel colors are determined by a simple weighted average of Gaussian colors, eliminating the need for depth ordering or opacity attributes, which are required in 3DGS's alpha-blended rendering.
+Here are some key differences between 2DGS and 3DGS:
+
+- A single image is sufficient to train a 2DGS model, unlike 3DGS, which often requires multiple views.
+- 2DGS does not require handling camera poses or parameters.
+- In 2DGS, a single color is assigned to each Gaussian, whereas 3DGS uses spherical harmonics to model view-dependent appearance.
+- For 2DGS, pixel colors are determined by a simple weighted average of Gaussian colors, eliminating the need for depth ordering or opacity attributes, which are required in 3DGS's alpha-blended rendering.
 
 ## Problem Formulation
 A 2D Gaussian has a mean vector $\mu\in\mathbb{R}^2$ and a covariance matrix $\Sigma\in\mathbb{R}^{2 \times 2}$. The density is expressed as
@@ -21,9 +23,9 @@ Usually, people use $\Sigma=RSS^TR^T$ to ensure $\Sigma$ is always positive semi
 
 Lastly, we need to assign a color to each Gaussian. Unlike 3DGS, which uses spherical harmonics, we only need a vector $c\in\mathbb{R}^3$ to represent the RGB values of a 2D Gaussian.
 
-To summarize, each 2D Gaussian primitive is characterized by $(\mu, \theta, s, c)$. Each pixel value is determined by a weighted average of all the Gaussians:
+To summarize, each 2D Gaussian primitive is characterized by $(\mu, \theta, s, c)$. Each pixel value $\mathbf{RGB}(x)$ is determined by a weighted average of all the Gaussians where the weights are computed by the density function $G(x)$:
 $$
-P(x)=\dfrac{1}{\sum_i G_i(x)}\sum_i G_i(x)c_i
+\mathbf{RGB}(x)=\dfrac{1}{\sum_i G_i(x)}\sum_i G_i(x)c_i
 $$
 
 ## Target Image
@@ -37,13 +39,15 @@ Here is our target image with a size of 128x128.
 First, we randomly initialize all the Gaussian parameters. We use a total of 5000 Gaussians. Using more Gaussians improves quality but also increases memory usage.
 
 ```python
-initial_gs_num = 5000
-mu_array = jnp.array(np.random.rand(initial_gs_num, 2))
-theta_array = jnp.array(
-    np.random.rand(initial_gs_num, 1) * np.pi
-)  # between 0 and pi
-scaling_array = jnp.array(np.random.rand(initial_gs_num, 2) * 0.1)
-color_array = jnp.array(np.random.rand(initial_gs_num, 3) * 255)
+_GS_NUM = 5000
+key = jax.random.PRNGKey(0)
+key_mu, key_theta, key_scaling, key_color = jax.random.split(key, 4)
+mu_array = jax.random.uniform(key_mu, (_GS_NUM, 2), minval=0.0, maxval=1.0)
+theta_array = jax.random.uniform(key_theta, (_GS_NUM, 1), minval=0.0, maxval=jnp.pi)
+scaling_array = jax.random.uniform(
+    key_scaling, (_GS_NUM, 2), minval=0.0, maxval=0.1
+)
+color_array = jax.random.uniform(key_color, (_GS_NUM, 3), minval=0.0, maxval=255.0)
 ```
 
 Next, we implement the key part of the training code: a function to compute the Gaussian density. We will implement the function for computing the density of a single Gaussian at a single pixel location. We then use three layers of `jax.vmap` to vectorize the function, allowing a single call to compute the density for all Gaussians at all locations.
@@ -87,27 +91,36 @@ def render_image(mu_array, theta_array, scaling_array, color_array, coords):
     return rendered_image
 ```
 
-Now it is straightforward to implement the training loop in the `main` function.
+With all the code above, it is now straightforward to implement the training loop in the `main` function. We can summarize the training code as follows:
+
+- Initialize the gaussians
+- loop
+   - render the image
+   - compute l1 loss and gradients
+   - update gaussian parameters
+
+
 
 ```python
 _SIZE = 128
-_ITERATIONS = 2000
+_ITERATIONS = 1000
 _GS_INITIAL_NUM = 5000
 
 def main():
     img = Image.open("input.jpg")
     img_array = np.array(img)
-    initial_gs_num = _GS_INITIAL_NUM
-    mu_array = jnp.array(np.random.rand(initial_gs_num, 2))
-    theta_array = jnp.array(
-        np.random.rand(initial_gs_num, 1) * np.pi
-    )  # between 0 and pi
-    scaling_array = jnp.array(np.random.rand(initial_gs_num, 2) * 0.1)
-    color_array = jnp.array(np.random.rand(initial_gs_num, 3) * 255)  # 8bit RGB color
+    key = jax.random.PRNGKey(0)
+    key_mu, key_theta, key_scaling, key_color = jax.random.split(key, 4)
+    mu_array = jax.random.uniform(key_mu, (_GS_NUM, 2), minval=0.0, maxval=1.0)
+    theta_array = jax.random.uniform(key_theta, (_GS_NUM, 1), minval=0.0, maxval=jnp.pi)
+    scaling_array = jax.random.uniform(
+        key_scaling, (_GS_NUM, 2), minval=0.0, maxval=0.1
+    )
+    color_array = jax.random.uniform(key_color, (_GS_NUM, 3), minval=0.0, maxval=255.0)
 
     # create a grid of x, y coordinates
-    x = jnp.linspace(0, 1, _SIZE, dtype=jnp.float16)
-    y = jnp.linspace(0, 1, _SIZE, dtype=jnp.float16)
+    x = jnp.linspace(0, 1.0, _SIZE)
+    y = jnp.linspace(0, 1.0, _SIZE)
     xx, yy = jnp.meshgrid(x, y)
     coords = jnp.stack([xx, yy], axis=-1)  # shape (_SIZE, _SIZE, 2)
 
@@ -133,3 +146,27 @@ def main():
         params, opt_state = update(params, opt_state)
         current_loss = loss_fn(params)
 ```
+
+Please see the complete code in [this repo](https://github.com/tomondev/image-gs-toy-example).
+
+## Results
+
+The first image is the target image. The last image is from iteration 1000.
+
+![progression](progression.png)
+
+### animation
+
+![animation](progression.gif)
+
+## Important Notes
+
+The current code implementation is inefficient and overly simplistic. Improvements can be made in the following aspects:
+
+To enhance efficiency, we can avoid evaluating all Gaussians for every pixel. Gaussians located far from a pixel contribute negligibly to its color. A more efficient approach involves selecting the K Gaussians with the highest density at a given pixel. However, identifying and managing K Gaussians for each individual pixel might be too resource-intensive. A more pragmatic solution is to generate K Gaussians for a specific tile, while ensuring that Gaussians spanning multiple tiles are managed appropriately.
+
+It is not optimal to initialize the Gaussians randomly. Instead, we can initialize the geometry and color of the Gaussians according to pixel intensity and gradients. This will likely lead to faster convergence and better reconstruction quality.
+
+Last but not least, the number of Gaussians doesn't have to be fixed. In each iteration, we can remove some Gaussians whose contributions are negligible and create new Gaussians at pixels where reconstruction errors are high.
+
+Overall, this is a simple example that gives you an idea of how Gaussian splatting works. To render a high-quality image efficiently, there are many improvements that can be added.
