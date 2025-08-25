@@ -39,7 +39,7 @@
     "href": "posts/image-2dgs/index.html#target-image",
     "title": "A Toy Example of 2D Gaussian Splatting in JAX",
     "section": "Target Image",
-    "text": "Target Image\nHere is our target image with a size of 128x128.\n\n\n\ninput"
+    "text": "Target Image\nHere is our target image with a size of 128x128."
   },
   {
     "objectID": "posts/image-2dgs/index.html#implementation",
@@ -53,7 +53,7 @@
     "href": "posts/image-2dgs/index.html#results",
     "title": "A Toy Example of 2D Gaussian Splatting in JAX",
     "section": "Results",
-    "text": "Results\nThe first image is the target image. The last image is from iteration 1000.\n\n\n\nprogression\n\n\n\nanimation\n\n\n\nanimation"
+    "text": "Results\nThe first image is the target image. The last image is from iteration 1000.\n\n\nanimation"
   },
   {
     "objectID": "posts/image-2dgs/index.html#important-notes",
