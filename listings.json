@@ -2,6 +2,7 @@
   {
     "listing": "/index.html",
     "items": [
+      "/posts/image-2dgs/index.html",
       "/posts/post-with-code/index.html",
       "/posts/colab/index.html"
     ]
