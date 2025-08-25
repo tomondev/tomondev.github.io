@@ -32,7 +32,7 @@ We fix $x_{t}=1$ and set $\sigma$ to 0.5, 0.3, and 0.1. At 0.1, the reverse cond
 
 
 
-![img](assets/1186710D-D8DA-4427-B1E7-679CCA66F576.png)
+![](assets/1186710D-D8DA-4427-B1E7-679CCA66F576.png)
 
 
 
