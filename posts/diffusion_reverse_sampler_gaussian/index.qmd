@@ -6,29 +6,29 @@ date: 2025-01-01
 
 In diffusion models, let's assume that $x_0$ is the data sample (for example, an image) and $x_T$ is the noise. The forward process is defined as
 $$
-x_t=x_{t-1}+z_{t-1}
+x_t = x_{t-1} + z_{t-1}
 $$
 where $z_{t-1}$ is independent Gaussian noise $\mathcal{N}(0, \sigma^2)$.
 
 The construction of a reverse sampler relies on a key property: **for small $\sigma$ values, the conditional distribution $p(x_{t-1}|x_t)$ closely approximates a Gaussian distribution.** In this post, we will write a small experiment to verify this property.
 
-Let's assume that $p(x_{t-1})$ is a non-trivial distribution, for example, a mixture of two Gaussian distributions: $\mathcal{N}(x|\mu_1,\sigma_1^2)$ and $\mathcal{N}(x|\mu_2,\sigma_2^2)$  with equal weights. The pdf of $x_{t-1}$ can be written as
+Let's assume that $p(x_{t-1})$ is a non-trivial distribution, for example, a mixture of two Gaussian distributions: $\mathcal{N}(x|\mu_1,\sigma_1^2)$ and $\mathcal{N}(x|\mu_2,\sigma_2^2)$ with equal weights. The pdf of $x_{t-1}$ can be written as
 $$
-p(x)=  \dfrac{1}{2}\dfrac{1}{(2\pi\sigma_1^2)^{1/2}}\exp \left\{-\dfrac{1}{2\sigma_1^2}(x-\mu_1)^2\right\}+\dfrac{1}{2}\dfrac{1}{(2\pi\sigma_2^2)^{1/2}}\exp \left\{-\dfrac{1}{2\sigma_2^2}(x-\mu_2)^2\right\}
+p(x) = \dfrac{1}{2}\dfrac{1}{(2\pi\sigma_1^2)^{1/2}}\exp \left\{-\dfrac{1}{2\sigma_1^2}(x-\mu_1)^2\right\} + \dfrac{1}{2}\dfrac{1}{(2\pi\sigma_2^2)^{1/2}}\exp \left\{-\dfrac{1}{2\sigma_2^2}(x-\mu_2)^2\right\}
 $$
-Let's use $\mu_1=1, \sigma_1=0.6$ and $\mu_2=2, \sigma_2=0.2$ , the pdf looks like this
+Let's use $\mu_1=1, \sigma_1=0.6$ and $\mu_2=2, \sigma_2=0.2$. The pdf looks like this:
 
 
 
 ![](assets/6F8FD91A-A59E-453D-A637-B27D4C43665F.png)
 
-According to eq(1), we also know that the conditional distribution  $p(x_t|x_{t-1})$ is just a Gaussian. We are interested in the conditional distribution  $p(x_{t-1}|x_{t})$. According to Bayes rule, it can be written as:
+According to eq(1), we also know that the conditional distribution $p(x_t|x_{t-1})$ is just a Gaussian. We are interested in the conditional distribution $p(x_{t-1}|x_{t})$. According to Bayes' rule, it can be written as:
 $$
-p(x_{t-1}|x_t)=\dfrac{p(x_{t}|x_{t-1})p(x_{t-1})}{\int p(x_{t}|x_{t-1})p(x_{t-1})dx_{t-1}}
+p(x_{t-1}|x_t) = \dfrac{p(x_{t}|x_{t-1})p(x_{t-1})}{\int p(x_{t}|x_{t-1})p(x_{t-1})dx_{t-1}}
 $$
-We already know $p(x_t|x_{t-1})$ and $p(x_{t-1})$, so the only thing we need to figure out is the denominator. But notice that the denominator is a constant w.r.t. $x_{t-1}$. Therefore we can just look at the nominator to see how close it is to a Gaussian distribution. Below we plot the unnormalized pdf defined by the nominator at different $\sigma$ values:
+We already know $p(x_t|x_{t-1})$ and $p(x_{t-1})$, so the only thing we need to figure out is the denominator. But notice that the denominator is a constant with respect to $x_{t-1}$. Therefore, we can just look at the numerator to see how close it is to a Gaussian distribution. Below, we plot the unnormalized pdf defined by the numerator at different $\sigma$ values:
 
-We fix $x_{t}=1$ and set $\sigma$ to 0.5, 0.3, and 0.1.  At 0.1, the 
+We fix $x_{t}=1$ and set $\sigma$ to 0.5, 0.3, and 0.1. At 0.1, the reverse conditional distribution is almost the same as a Gaussian.
 
 
 
