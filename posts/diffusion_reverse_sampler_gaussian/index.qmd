@@ -38,4 +38,4 @@ We fix $x_{t}=1$ and set $\sigma$ to 0.5, 0.3, and 0.1. At 0.1, the reverse cond
 
 Curious readers can find the mathematical proof in [2406.08929](https://arxiv.org/abs/2406.08929).
 
-[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1z0Ae6A14yFNHfmNh0ywIRiIvTS7lsoZx?usp=sharing)
+[![](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1z0Ae6A14yFNHfmNh0ywIRiIvTS7lsoZx?usp=sharing)
