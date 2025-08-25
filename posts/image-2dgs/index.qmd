@@ -148,7 +148,8 @@ def main():
         current_loss = loss_fn(params)
 ```
 
-Please see the complete code in [this repo](https://github.com/tomondev/image-gs-toy-example).
+You can find the complete code in 
+[![View filled on Github](https://img.shields.io/static/v1.svg?logo=github&label=Repo&message=View%20On%20Github&color=lightgrey)](https://github.com/tomondev/image-gs-toy-example)
 
 ## Results
 
