@@ -2,14 +2,18 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://tomondev.github.io/index.html</loc>
-    <lastmod>2025-08-25T02:31:57.381Z</lastmod>
+    <lastmod>2025-08-25T03:03:57.140Z</lastmod>
+  </url>
+  <url>
+    <loc>https://tomondev.github.io/posts/diffusion_reverse_sampler_gaussian/index.html</loc>
+    <lastmod>2025-08-25T03:03:57.185Z</lastmod>
   </url>
   <url>
     <loc>https://tomondev.github.io/posts/image-2dgs/index.html</loc>
-    <lastmod>2025-08-25T02:31:57.426Z</lastmod>
+    <lastmod>2025-08-25T03:03:57.186Z</lastmod>
   </url>
   <url>
     <loc>https://tomondev.github.io/about.html</loc>
-    <lastmod>2025-08-25T02:31:57.381Z</lastmod>
+    <lastmod>2025-08-25T03:03:57.140Z</lastmod>
   </url>
 </urlset>

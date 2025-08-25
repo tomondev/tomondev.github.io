@@ -4,7 +4,14 @@
     "href": "index.html",
     "title": "On Notes",
     "section": "",
-    "text": "Date\n\n\n\nTitle\n\n\n\nAuthor\n\n\n\n\n\n\n\n\nAug 1, 2025\n\n\nA Toy Example of 2D Gaussian Splatting in JAX\n\n\nTom \n\n\n\n\n\n\nNo matching items"
+    "text": "Date\n\n\n\nTitle\n\n\n\nAuthor\n\n\n\n\n\n\n\n\nAug 1, 2025\n\n\nA Toy Example of 2D Gaussian Splatting in JAX\n\n\nTom \n\n\n\n\n\n\nJan 1, 2025\n\n\nDiffusion Reverse Samplers Approximate Gaussian Distributions\n\n\nTom \n\n\n\n\n\n\nNo matching items"
+  },
+  {
+    "objectID": "posts/diffusion_reverse_sampler_gaussian/index.html",
+    "href": "posts/diffusion_reverse_sampler_gaussian/index.html",
+    "title": "Diffusion Reverse Samplers Approximate Gaussian Distributions",
+    "section": "",
+    "text": "In diffusion models, let’s assume that \\(x_0\\) is the data sample (for example, an image) and \\(x_T\\) is the noise. The forward process is defined as \\[\nx_t = x_{t-1} + z_{t-1}\n\\] where \\(z_{t-1}\\) is independent Gaussian noise \\(\\mathcal{N}(0, \\sigma^2)\\).\nThe construction of a reverse sampler relies on a key property: for small \\(\\sigma\\) values, the conditional distribution \\(p(x_{t-1}|x_t)\\) closely approximates a Gaussian distribution. In this post, we will write a small experiment to verify this property.\nLet’s assume that \\(p(x_{t-1})\\) is a non-trivial distribution, for example, a mixture of two Gaussian distributions: \\(\\mathcal{N}(x|\\mu_1,\\sigma_1^2)\\) and \\(\\mathcal{N}(x|\\mu_2,\\sigma_2^2)\\) with equal weights. The pdf of \\(x_{t-1}\\) can be written as \\[\np(x) = \\dfrac{1}{2}\\dfrac{1}{(2\\pi\\sigma_1^2)^{1/2}}\\exp \\left\\{-\\dfrac{1}{2\\sigma_1^2}(x-\\mu_1)^2\\right\\} + \\dfrac{1}{2}\\dfrac{1}{(2\\pi\\sigma_2^2)^{1/2}}\\exp \\left\\{-\\dfrac{1}{2\\sigma_2^2}(x-\\mu_2)^2\\right\\}\n\\] Let’s use \\(\\mu_1=1, \\sigma_1=0.6\\) and \\(\\mu_2=2, \\sigma_2=0.2\\). The pdf looks like this:\n\nAccording to eq(1), we also know that the conditional distribution \\(p(x_t|x_{t-1})\\) is just a Gaussian. We are interested in the conditional distribution \\(p(x_{t-1}|x_{t})\\). According to Bayes’ rule, it can be written as: \\[\np(x_{t-1}|x_t) = \\dfrac{p(x_{t}|x_{t-1})p(x_{t-1})}{\\int p(x_{t}|x_{t-1})p(x_{t-1})dx_{t-1}}\n\\] We already know \\(p(x_t|x_{t-1})\\) and \\(p(x_{t-1})\\), so the only thing we need to figure out is the denominator. But notice that the denominator is a constant with respect to \\(x_{t-1}\\). Therefore, we can just look at the numerator to see how close it is to a Gaussian distribution. Below, we plot the unnormalized pdf defined by the numerator at different \\(\\sigma\\) values:\nWe fix \\(x_{t}=1\\) and set \\(\\sigma\\) to 0.5, 0.3, and 0.1. At 0.1, the reverse conditional distribution is almost the same as a Gaussian.\n\n\n\nimg\n\n\nCurious readers can find the mathematical proof in 2406.08929.\n\n\n\nOpen in Colab"
   },
   {
     "objectID": "posts/image-2dgs/index.html",

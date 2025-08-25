@@ -6,8 +6,10 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
+<meta name="author" content="Tom">
+<meta name="dcterms.date" content="2025-01-01">
 
-<title>On Notes</title>
+<title>Diffusion Reverse Samplers Approximate Gaussian Distributions – On Notes</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -23,25 +25,23 @@ ul.task-list li input[type="checkbox"] {
 </style>
 
 
-<script src="site_libs/quarto-nav/quarto-nav.js"></script>
-<script src="site_libs/quarto-nav/headroom.min.js"></script>
-<script src="site_libs/clipboard/clipboard.min.js"></script>
-<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
-<script src="site_libs/quarto-search/fuse.min.js"></script>
-<script src="site_libs/quarto-search/quarto-search.js"></script>
-<meta name="quarto:offset" content="./">
-<script src="site_libs/quarto-listing/list.min.js"></script>
-<script src="site_libs/quarto-listing/quarto-listing.js"></script>
-<script src="site_libs/quarto-html/quarto.js" type="module"></script>
-<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
-<script src="site_libs/quarto-html/popper.min.js"></script>
-<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
-<script src="site_libs/quarto-html/anchor.min.js"></script>
-<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-ea385d0e468b0dd5ea5bf0780b1290d9.css" rel="stylesheet" id="quarto-text-highlighting-styles">
-<script src="site_libs/bootstrap/bootstrap.min.js"></script>
-<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-528204117fddde345da99c6598249467.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-ea385d0e468b0dd5ea5bf0780b1290d9.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-528204117fddde345da99c6598249467.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -69,35 +69,6 @@ ul.task-list li input[type="checkbox"] {
     "search-label": "Search"
   }
 }</script>
-<script>
-
-  window.document.addEventListener("DOMContentLoaded", function (_event) {
-    const listingTargetEl = window.document.querySelector('#listing-listing .list');
-    if (!listingTargetEl) {
-      // No listing discovered, do not attach.
-      return; 
-    }
-
-    const options = {
-      valueNames: ['listing-date','listing-title','listing-author',{ data: ['index'] },{ data: ['categories'] },{ data: ['listing-date-sort'] },{ data: ['listing-title-sort'] }],
-      
-      searchColumns: ["listing-date","listing-title","listing-author"],
-    };
-
-    window['quarto-listings'] = window['quarto-listings'] || {};
-    window['quarto-listings']['listing-listing'] = new List('listing-listing', options);
-
-    if (window['quarto-listing-loaded']) {
-      window['quarto-listing-loaded']();
-    }
-  });
-
-  window.addEventListener('hashchange',() => {
-    if (window['quarto-listing-loaded']) {
-      window['quarto-listing-loaded']();
-    }
-  })
-  </script>
 
   <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
   <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
@@ -131,14 +102,14 @@ window.Quarto = {
 
 </head>
 
-<body class="nav-fixed quarto-light">
+<body class="nav-fixed fullcontent quarto-light">
 
 <div id="quarto-search-results"></div>
   <header id="quarto-header" class="headroom fixed-top quarto-banner">
     <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
-    <a class="navbar-brand" href="./index.html">
+    <a class="navbar-brand" href="../../index.html">
     <span class="navbar-title">On Notes</span>
     </a>
   </div>
@@ -149,7 +120,7 @@ window.Quarto = {
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll me-auto">
   <li class="nav-item">
-    <a class="nav-link" href="./about.html"> 
+    <a class="nav-link" href="../../about.html"> 
 <span class="menu-text">About</span></a>
   </li>  
 </ul>
@@ -162,86 +133,72 @@ window.Quarto = {
 <!-- content -->
 <header id="title-block-header" class="quarto-title-block default page-columns page-full">
   <div class="quarto-title-banner page-columns page-full">
-    <div class="quarto-title column-page">
-      <h1 class="title">On Notes</h1>
+    <div class="quarto-title column-body">
+      <h1 class="title">Diffusion Reverse Samplers Approximate Gaussian Distributions</h1>
                       </div>
   </div>
     
   
-  <div class="quarto-title-meta column-page">
+  <div class="quarto-title-meta">
 
+      <div>
+      <div class="quarto-title-meta-heading">Author</div>
+      <div class="quarto-title-meta-contents">
+               <p>Tom </p>
+            </div>
+    </div>
       
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">January 1, 2025</p>
+      </div>
+    </div>
     
       
     </div>
     
   
-  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-full page-navbar">
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
 <!-- sidebar -->
 <!-- margin-sidebar -->
     
 <!-- main -->
-<main class="content quarto-banner-title-block column-page" id="quarto-document-content">
+<main class="content quarto-banner-title-block" id="quarto-document-content">
 
 
 
 
 
+<p>In diffusion models, let’s assume that <span class="math inline">\(x_0\)</span> is the data sample (for example, an image) and <span class="math inline">\(x_T\)</span> is the noise. The forward process is defined as <span class="math display">\[
+x_t = x_{t-1} + z_{t-1}
+\]</span> where <span class="math inline">\(z_{t-1}\)</span> is independent Gaussian noise <span class="math inline">\(\mathcal{N}(0, \sigma^2)\)</span>.</p>
+<p>The construction of a reverse sampler relies on a key property: <strong>for small <span class="math inline">\(\sigma\)</span> values, the conditional distribution <span class="math inline">\(p(x_{t-1}|x_t)\)</span> closely approximates a Gaussian distribution.</strong> In this post, we will write a small experiment to verify this property.</p>
+<p>Let’s assume that <span class="math inline">\(p(x_{t-1})\)</span> is a non-trivial distribution, for example, a mixture of two Gaussian distributions: <span class="math inline">\(\mathcal{N}(x|\mu_1,\sigma_1^2)\)</span> and <span class="math inline">\(\mathcal{N}(x|\mu_2,\sigma_2^2)\)</span> with equal weights. The pdf of <span class="math inline">\(x_{t-1}\)</span> can be written as <span class="math display">\[
+p(x) = \dfrac{1}{2}\dfrac{1}{(2\pi\sigma_1^2)^{1/2}}\exp \left\{-\dfrac{1}{2\sigma_1^2}(x-\mu_1)^2\right\} + \dfrac{1}{2}\dfrac{1}{(2\pi\sigma_2^2)^{1/2}}\exp \left\{-\dfrac{1}{2\sigma_2^2}(x-\mu_2)^2\right\}
+\]</span> Let’s use <span class="math inline">\(\mu_1=1, \sigma_1=0.6\)</span> and <span class="math inline">\(\mu_2=2, \sigma_2=0.2\)</span>. The pdf looks like this:</p>
+<p><img src="assets/6F8FD91A-A59E-453D-A637-B27D4C43665F.png" class="img-fluid"></p>
+<p>According to eq(1), we also know that the conditional distribution <span class="math inline">\(p(x_t|x_{t-1})\)</span> is just a Gaussian. We are interested in the conditional distribution <span class="math inline">\(p(x_{t-1}|x_{t})\)</span>. According to Bayes’ rule, it can be written as: <span class="math display">\[
+p(x_{t-1}|x_t) = \dfrac{p(x_{t}|x_{t-1})p(x_{t-1})}{\int p(x_{t}|x_{t-1})p(x_{t-1})dx_{t-1}}
+\]</span> We already know <span class="math inline">\(p(x_t|x_{t-1})\)</span> and <span class="math inline">\(p(x_{t-1})\)</span>, so the only thing we need to figure out is the denominator. But notice that the denominator is a constant with respect to <span class="math inline">\(x_{t-1}\)</span>. Therefore, we can just look at the numerator to see how close it is to a Gaussian distribution. Below, we plot the unnormalized pdf defined by the numerator at different <span class="math inline">\(\sigma\)</span> values:</p>
+<p>We fix <span class="math inline">\(x_{t}=1\)</span> and set <span class="math inline">\(\sigma\)</span> to 0.5, 0.3, and 0.1. At 0.1, the reverse conditional distribution is almost the same as a Gaussian.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="assets/1186710D-D8DA-4427-B1E7-679CCA66F576.png" class="img-fluid figure-img"></p>
+<figcaption>img</figcaption>
+</figure>
+</div>
+<p>Curious readers can find the mathematical proof in <a href="https://arxiv.org/abs/2406.08929">2406.08929</a>.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><a href="https://colab.research.google.com/drive/1z0Ae6A14yFNHfmNh0ywIRiIvTS7lsoZx?usp=sharing"><img src="https://colab.research.google.com/assets/colab-badge.svg" class="img-fluid figure-img"></a></p>
+<figcaption>Open in Colab</figcaption>
+</figure>
+</div>
 
 
 
-
-<div class="quarto-listing quarto-listing-container-table" id="listing-listing">
-<table class="quarto-listing-table table">
-<thead>
-<tr>
-
-<th>
-Date
-</th>
-
-<th>
-Title
-</th>
-
-<th>
-Author
-</th>
-
-</tr>
-</thead>
-<tbody class="list">
-
-<tr data-index="0" data-listing-date-sort="1754006400000" data-listing-file-modified-sort="1756091037186" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="7" data-listing-word-count-sort="1293" data-listing-title-sort="A Toy Example of 2D Gaussian Splatting in JAX" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">Aug 1, 2025</span>
-</td>
-<td>
-<a href="./posts/image-2dgs/index.html" class="title listing-title">A Toy Example of 2D Gaussian Splatting in JAX</a>
-</td>
-<td>
-<span class="listing-author">Tom </span>
-</td>
-
-</tr>
-
-<tr data-index="1" data-listing-date-sort="1735689600000" data-listing-file-modified-sort="1756091037185" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-word-count-sort="247" data-listing-title-sort="Diffusion Reverse Samplers Approximate Gaussian Distributions" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">Jan 1, 2025</span>
-</td>
-<td>
-<a href="./posts/diffusion_reverse_sampler_gaussian/index.html" class="title listing-title">Diffusion Reverse Samplers Approximate Gaussian Distributions</a>
-</td>
-<td>
-<span class="listing-author">Tom </span>
-</td>
-
-</tr>
-
-</tbody>
-</table>
-<div class="listing-no-matching d-none">No matching items</div>
-</div></main> <!-- /main -->
+</main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
     const icon = "";
