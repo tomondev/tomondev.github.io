@@ -32,7 +32,7 @@ $$
 
 Here is our target image with a size of 128x128.
 
-![input](input.jpg)
+![](input.jpg)
 
 ## Implementation
 
@@ -153,11 +153,11 @@ Please see the complete code in [this repo](https://github.com/tomondev/image-gs
 
 The first image is the target image. The last image is from iteration 1000.
 
-![progression](progression.png)
+![](progression.png)
 
 ### animation
 
-![animation](progression.gif)
+![](progression.gif)
 
 ## Important Notes
 
