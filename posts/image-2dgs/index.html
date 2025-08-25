@@ -219,8 +219,8 @@ window.Quarto = {
 G(x)=\exp\left(-\dfrac{1}{2}(x-\mu)^T\Sigma^{-1}(x-\mu)\right)
 \]</span> where <span class="math inline">\(x\)</span> is the pixel location. Note that this is not a probability density, so it doesn’t need to be normalized.</p>
 <p>Usually, people use <span class="math inline">\(\Sigma=RSS^TR^T\)</span> to ensure <span class="math inline">\(\Sigma\)</span> is always positive semi-definite during training. <span class="math inline">\(R\in\mathbb{R}^{2\times2}\)</span> is a rotation matrix, and <span class="math inline">\(S\in\mathbb{R}^{2\times2}\)</span> is a scaling matrix. <span class="math inline">\(R\)</span> is parameterized by an angle <span class="math inline">\(\theta\in[0,\pi]\)</span>, and <span class="math inline">\(S\)</span> is determined by a scaling vector <span class="math inline">\(s\in\mathbb{R}^2_+\)</span>.</p>
-<p>Lastly, we need to assign a color to each Gaussian. Unlike 3DGS, which uses spherical harmonics, we only need a vector <span class="math inline">\(c\in\mathbb{R}^3\)</span> to represent the RGB values of a 2D Gaussian.</p>
-<p>To summarize, each 2D Gaussian primitive is characterized by <span class="math inline">\((\mu, \theta, s, c)\)</span>. Each pixel value <span class="math inline">\(\mathbf{RGB}(x)\)</span> is determined by a weighted average of all the Gaussians where the weights are computed by the density function <span class="math inline">\(G(x)\)</span>: <span class="math display">\[
+<p>Next, we need to assign a color to each Gaussian. Unlike 3DGS, which uses spherical harmonics, we only need a vector <span class="math inline">\(c\in\mathbb{R}^3\)</span> to represent the RGB values of a 2D Gaussian.</p>
+<p>In the end, a 2D Gaussian primitive is characterized by <span class="math inline">\((\mu, \theta, s, c)\)</span>. Each pixel value <span class="math inline">\(\mathbf{RGB}(x)\)</span> is determined by a weighted average of all the Gaussians where the weights are computed by the density function <span class="math inline">\(G(x)\)</span>: <span class="math display">\[
 \mathbf{RGB}(x)=\dfrac{1}{\sum_i G_i(x)}\sum_i G_i(x)c_i
 \]</span></p>
 </section>
@@ -274,7 +274,7 @@ G(x)=\exp\left(-\dfrac{1}{2}(x-\mu)^T\Sigma^{-1}(x-\mu)\right)
 <span id="cb3-8"><a href="#cb3-8"></a>    )</span>
 <span id="cb3-9"><a href="#cb3-9"></a>    rendered_image <span class="op">=</span> jnp.clip(rendered_image, <span class="dv">0</span>, <span class="dv">255</span>)</span>
 <span id="cb3-10"><a href="#cb3-10"></a>    <span class="cf">return</span> rendered_image</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>With all the code above, it is now straightforward to implement the training loop in the <code>main</code> function. We can summarize the training code as follows:</p>
+<p><code>render_image</code> was implemented in a differentiable way. We can compute the loss by comparing the reconstructed image against the target image. Either <span class="math inline">\(L_1\)</span> loss or MSE will work. It is now straightforward to implement the training loop in the <code>main</code> function. We can summarize the training code as follows:</p>
 <ul>
 <li>Initialize the gaussians</li>
 <li>loop
@@ -342,7 +342,7 @@ G(x)=\exp\left(-\dfrac{1}{2}(x-\mu)^T\Sigma^{-1}(x-\mu)\right)
 <h2 class="anchored" data-anchor-id="important-notes">Important Notes</h2>
 <p>The current implementation is inefficient and overly simplistic. Improvements can be made in the following aspects:</p>
 <p>To enhance efficiency, we can avoid evaluating all Gaussians for every pixel. Gaussians located far from a pixel contribute negligibly to its color. A more efficient approach involves selecting the K Gaussians with the highest density at a given pixel. However, identifying and managing K Gaussians for each individual pixel might be too resource-intensive. A more pragmatic solution is to generate K Gaussians for a specific tile, while ensuring that Gaussians spanning multiple tiles are managed appropriately.</p>
-<p>It is not optimal to initialize the Gaussians randomly. Instead, we can initialize the geometry and color of the Gaussians according to pixel intensity and gradients. This will likely lead to faster convergence and better reconstruction quality.</p>
+<p>It is not optimal to initialize the Gaussians randomly. Instead, we can initialize the geometry and color of the Gaussians according to pixel intensity and gradients in the target image. This will likely lead to faster convergence and better reconstruction quality.</p>
 <p>Last but not least, the number of Gaussians doesn’t have to be fixed. In each iteration, we can remove some Gaussians whose contributions are negligible and create new Gaussians at pixels where reconstruction errors are high.</p>
 <p>To summarize, this is a basic example that illustrates how Gaussian splatting works. Many improvements can be added to render a high-quality image more efficiently.</p>
 
