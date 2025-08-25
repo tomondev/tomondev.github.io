@@ -22,9 +22,9 @@ where $x$ is the pixel location. Note that this is not a probability density, so
 
 Usually, people use $\Sigma=RSS^TR^T$ to ensure $\Sigma$ is always positive semi-definite during training. $R\in\mathbb{R}^{2\times2}$ is a rotation matrix, and $S\in\mathbb{R}^{2\times2}$ is a scaling matrix. $R$ is parameterized by an angle $\theta\in[0,\pi]$, and $S$ is determined by a scaling vector $s\in\mathbb{R}^2_+$.
 
-Lastly, we need to assign a color to each Gaussian. Unlike 3DGS, which uses spherical harmonics, we only need a vector $c\in\mathbb{R}^3$ to represent the RGB values of a 2D Gaussian.
+Next, we need to assign a color to each Gaussian. Unlike 3DGS, which uses spherical harmonics, we only need a vector $c\in\mathbb{R}^3$ to represent the RGB values of a 2D Gaussian.
 
-To summarize, each 2D Gaussian primitive is characterized by $(\mu, \theta, s, c)$. Each pixel value $\mathbf{RGB}(x)$ is determined by a weighted average of all the Gaussians where the weights are computed by the density function $G(x)$:
+In the end, a 2D Gaussian primitive is characterized by $(\mu, \theta, s, c)$. Each pixel value $\mathbf{RGB}(x)$ is determined by a weighted average of all the Gaussians where the weights are computed by the density function $G(x)$:
 $$
 \mathbf{RGB}(x)=\dfrac{1}{\sum_i G_i(x)}\sum_i G_i(x)c_i
 $$
@@ -92,7 +92,7 @@ def render_image(mu_array, theta_array, scaling_array, color_array, coords):
     return rendered_image
 ```
 
-With all the code above, it is now straightforward to implement the training loop in the `main` function. We can summarize the training code as follows:
+`render_image` was implemented in a differentiable way. We can compute the loss by comparing the reconstructed image against the target image. Either $L_1$ loss or MSE will work. It is now straightforward to implement the training loop in the `main` function. We can summarize the training code as follows:
 
 - Initialize the gaussians
 - loop
@@ -167,7 +167,7 @@ The current implementation is inefficient and overly simplistic. Improvements ca
 
 To enhance efficiency, we can avoid evaluating all Gaussians for every pixel. Gaussians located far from a pixel contribute negligibly to its color. A more efficient approach involves selecting the K Gaussians with the highest density at a given pixel. However, identifying and managing K Gaussians for each individual pixel might be too resource-intensive. A more pragmatic solution is to generate K Gaussians for a specific tile, while ensuring that Gaussians spanning multiple tiles are managed appropriately.
 
-It is not optimal to initialize the Gaussians randomly. Instead, we can initialize the geometry and color of the Gaussians according to pixel intensity and gradients. This will likely lead to faster convergence and better reconstruction quality.
+It is not optimal to initialize the Gaussians randomly. Instead, we can initialize the geometry and color of the Gaussians according to pixel intensity and gradients in the target image. This will likely lead to faster convergence and better reconstruction quality.
 
 Last but not least, the number of Gaussians doesn't have to be fixed. In each iteration, we can remove some Gaussians whose contributions are negligible and create new Gaussians at pixels where reconstruction errors are high.
 
