@@ -340,11 +340,11 @@ G(x)=\exp\left(-\dfrac{1}{2}(x-\mu)^T\Sigma^{-1}(x-\mu)\right)
 </section>
 <section id="important-notes" class="level2">
 <h2 class="anchored" data-anchor-id="important-notes">Important Notes</h2>
-<p>The current code implementation is inefficient and overly simplistic. Improvements can be made in the following aspects:</p>
+<p>The current implementation is inefficient and overly simplistic. Improvements can be made in the following aspects:</p>
 <p>To enhance efficiency, we can avoid evaluating all Gaussians for every pixel. Gaussians located far from a pixel contribute negligibly to its color. A more efficient approach involves selecting the K Gaussians with the highest density at a given pixel. However, identifying and managing K Gaussians for each individual pixel might be too resource-intensive. A more pragmatic solution is to generate K Gaussians for a specific tile, while ensuring that Gaussians spanning multiple tiles are managed appropriately.</p>
 <p>It is not optimal to initialize the Gaussians randomly. Instead, we can initialize the geometry and color of the Gaussians according to pixel intensity and gradients. This will likely lead to faster convergence and better reconstruction quality.</p>
 <p>Last but not least, the number of Gaussians doesn’t have to be fixed. In each iteration, we can remove some Gaussians whose contributions are negligible and create new Gaussians at pixels where reconstruction errors are high.</p>
-<p>Overall, this is a simple example that gives you an idea of how Gaussian splatting works. To render a high-quality image efficiently, there are many improvements that can be added.</p>
+<p>To summarize, this is a basic example that illustrates how Gaussian splatting works. Many improvements can be added to render a high-quality image more efficiently.</p>
 
 
 </section>
