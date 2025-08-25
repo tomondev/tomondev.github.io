@@ -162,7 +162,7 @@ The first image is the target image. The last image is from iteration 1000.
 
 ## Important Notes
 
-The current code implementation is inefficient and overly simplistic. Improvements can be made in the following aspects:
+The current implementation is inefficient and overly simplistic. Improvements can be made in the following aspects:
 
 To enhance efficiency, we can avoid evaluating all Gaussians for every pixel. Gaussians located far from a pixel contribute negligibly to its color. A more efficient approach involves selecting the K Gaussians with the highest density at a given pixel. However, identifying and managing K Gaussians for each individual pixel might be too resource-intensive. A more pragmatic solution is to generate K Gaussians for a specific tile, while ensuring that Gaussians spanning multiple tiles are managed appropriately.
 
@@ -170,4 +170,4 @@ It is not optimal to initialize the Gaussians randomly. Instead, we can initiali
 
 Last but not least, the number of Gaussians doesn't have to be fixed. In each iteration, we can remove some Gaussians whose contributions are negligible and create new Gaussians at pixels where reconstruction errors are high.
 
-Overall, this is a simple example that gives you an idea of how Gaussian splatting works. To render a high-quality image efficiently, there are many improvements that can be added.
+To summarize, this is a basic example that illustrates how Gaussian splatting works. Many improvements can be added to render a high-quality image more efficiently.
