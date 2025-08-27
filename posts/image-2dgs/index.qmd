@@ -29,12 +29,6 @@ $$
 \mathbf{RGB}(x)=\dfrac{1}{\sum_i G_i(x)}\sum_i G_i(x)c_i
 $$
 
-## Target Image
-
-Here is our target image with a size of 128x128.
-
-![](input.jpg)
-
 ## Implementation
 
 First, we randomly initialize all the Gaussian parameters. We use a total of 5000 Gaussians. Using more Gaussians improves quality but also increases memory usage.
@@ -75,7 +69,7 @@ def compute_gaussians(mu, theta, scaling, coord):
     diff = coord - mu
     exponent = -0.5 * diff @ jnp.linalg.inv(Sigma) @ diff.T
     return jnp.exp(exponent)
-```    
+```
 
 With `compute_gaussians` implemented, it is easy to finish the rendering function. It basically computes a weighted average of all Gaussian colors for each pixel. `@jax.jit` is needed to compile and accelerate the rendering call.
 
@@ -90,6 +84,12 @@ def render_image(mu_array, theta_array, scaling_array, color_array, coords):
     )
     return jnp.clip(rendered_image, 0, 255)
 ```
+
+The image below illustrates the rendering of two random Gaussians. Notice how colors blend at the intersection. High-quality image rendering typically utilizes tens of thousands of Gaussians.
+
+![](gs.png)
+
+
 
 `render_image` is implemented in a differentiable way. We can compute the loss by comparing the reconstructed image against the target image. Either $L_1$ loss or MSE will work. It is now straightforward to implement the training loop in the `main` function. We can summarize the training code as follows:
 
@@ -149,6 +149,12 @@ def main():
 
 You can find the complete code in 
 [![View filled on Github](https://img.shields.io/static/v1.svg?logo=github&label=Repo&message=View%20On%20Github&color=lightgrey)](https://github.com/tomondev/image-gs-toy-example)
+
+## Target Image
+
+Here is our target image with a size of 128x128.
+
+![](input.jpg)
 
 ## Results
 
