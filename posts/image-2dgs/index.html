@@ -224,11 +224,6 @@ G(x)=\exp\left(-\dfrac{1}{2}(x-\mu)^T\Sigma^{-1}(x-\mu)\right)
 \mathbf{RGB}(x)=\dfrac{1}{\sum_i G_i(x)}\sum_i G_i(x)c_i
 \]</span></p>
 </section>
-<section id="target-image" class="level2">
-<h2 class="anchored" data-anchor-id="target-image">Target Image</h2>
-<p>Here is our target image with a size of 128x128.</p>
-<p><img src="input.jpg" class="img-fluid"></p>
-</section>
 <section id="implementation" class="level2">
 <h2 class="anchored" data-anchor-id="implementation">Implementation</h2>
 <p>First, we randomly initialize all the Gaussian parameters. We use a total of 5000 Gaussians. Using more Gaussians improves quality but also increases memory usage.</p>
@@ -273,6 +268,8 @@ G(x)=\exp\left(-\dfrac{1}{2}(x-\mu)^T\Sigma^{-1}(x-\mu)\right)
 <span id="cb3-7"><a href="#cb3-7"></a>        jnp.<span class="bu">sum</span>(gaussians, axis<span class="op">=-</span><span class="dv">1</span>, keepdims<span class="op">=</span><span class="va">True</span>) <span class="op">+</span> <span class="fl">1e-6</span></span>
 <span id="cb3-8"><a href="#cb3-8"></a>    )</span>
 <span id="cb3-9"><a href="#cb3-9"></a>    <span class="cf">return</span> jnp.clip(rendered_image, <span class="dv">0</span>, <span class="dv">255</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>The image below illustrates the rendering of two random Gaussians. Notice how colors blend at the intersection. High-quality image rendering typically utilizes tens of thousands of Gaussians.</p>
+<p><img src="gs.png" class="img-fluid"></p>
 <p><code>render_image</code> is implemented in a differentiable way. We can compute the loss by comparing the reconstructed image against the target image. Either <span class="math inline">\(L_1\)</span> loss or MSE will work. It is now straightforward to implement the training loop in the <code>main</code> function. We can summarize the training code as follows:</p>
 <ul>
 <li>Initialize the gaussians</li>
@@ -327,6 +324,11 @@ G(x)=\exp\left(-\dfrac{1}{2}(x-\mu)^T\Sigma^{-1}(x-\mu)\right)
 <span id="cb4-42"><a href="#cb4-42"></a>        params, opt_state <span class="op">=</span> update(params, opt_state)</span>
 <span id="cb4-43"><a href="#cb4-43"></a>        current_loss <span class="op">=</span> loss_fn(params)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>You can find the complete code in <a href="https://github.com/tomondev/image-gs-toy-example"><img src="https://img.shields.io/static/v1.svg?logo=github&amp;label=Repo&amp;message=View%20On%20Github&amp;color=lightgrey" class="img-fluid" alt="View filled on Github"></a></p>
+</section>
+<section id="target-image" class="level2">
+<h2 class="anchored" data-anchor-id="target-image">Target Image</h2>
+<p>Here is our target image with a size of 128x128.</p>
+<p><img src="input.jpg" class="img-fluid"></p>
 </section>
 <section id="results" class="level2">
 <h2 class="anchored" data-anchor-id="results">Results</h2>
