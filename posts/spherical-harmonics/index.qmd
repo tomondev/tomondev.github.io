@@ -2,7 +2,6 @@
 title: "Spherical Harmonics and 3D Gaussian Splatting Rendering"
 date: 2025-09-01
 author: Tom
-draft: false
 ---
 
 
@@ -112,9 +111,9 @@ We use a world map as the target spherical function we aim to approximate. The p
 
 Next, we sample 500 points on the sphere. These are the locations at which we approximate the target function with SH. How do we uniformly sample points on a sphere? There are many methods; here we use a simple method called the [Fibonacci lattice](https://observablehq.com/@meetamit/fibonacci-lattices).
 
-We randomly initialize the coefficients $k_l^m$ and compute the values at the 500 points using Equation (1). We then compare these values with the target function to compute the loss. We run the Adam optimizer to iteratively find optimal values for $k_l^m$. Detailed code is in the repository: [![View on GitHub](https://img.shields.io/static/v1.svg?logo=github&label=Repo&message=View%20On%20Github&color=lightgrey)](https://github.com/tomondev/spherical-harmonics-example)
+We randomly initialize the coefficients $k_l^m$ and compute the values at the 500 points using Equation (1). We then compare these values with the target function to compute the $l2$ loss. We run the Adam optimizer to iteratively find optimal values for $k_l^m$. Detailed code is in the repository: [![View on GitHub](https://img.shields.io/static/v1.svg?logo=github&label=Repo&message=View%20On%20Github&color=lightgrey)](https://github.com/tomondev/spherical-harmonics-example)
 
-For each experiment, we sample 500 points and run 5,000 iterations. The results below show the approximated image at iteration 5,000 for $L = 10$, $20$, and $30$. We can see that larger $L$ helps recover more detail in the approximation.
+For each experiment, we sample 500 points and run 5,000 iterations. The results below show the approximated image at iteration 5,000 for $L = 10$, $20$, and $30$. We can see that larger $L$ helps recover more details in the approximated image.
 
 L = 10 ![](output_5000_d10.png)
 
@@ -122,14 +121,14 @@ L = 20 ![](output_5000_d20.png)
 
 L = 30 ![](output_5000_d30.png)
 
+### The first image is the ground truth. The sequence beginning with the second image shows how the appoximated image evolves as training progresses.
 
 ![](progression.png)
 
-The first image is the ground truth. The sequence beginning with the second image shows how the approximation evolves as training progresses.
+### Animation showing the training progress.
 
 ![](progression.gif)
 
-Animation showing the training progress.
 
 ## References
 
