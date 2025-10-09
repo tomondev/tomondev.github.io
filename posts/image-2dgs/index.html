@@ -208,28 +208,28 @@ window.Quarto = {
 
 
 
-<p><a href="https://huggingface.co/blog/gaussian-splatting">3D Gaussian Splatting</a> (3DGS) is a rendering technique for photorealistic view synthesis. In this post, we will create a toy example of 2D Gaussian splatting (2DGS). We will train a 2DGS model to render a small image. This 2D version strips away much of the complexity found in 3DGS, making the core ideas much easier to understand.</p>
+<p><a href="https://huggingface.co/blog/gaussian-splatting">3D Gaussian Splatting</a> (3DGS) is a rendering technique for photorealistic view synthesis. In this post, we create a toy example of 2D Gaussian splatting (2DGS). We train a 2DGS model to render a small image. This 2D version removes much of the complexity found in 3DGS, making the core ideas easier to understand.</p>
 <p>Here are some key differences between 2DGS and 3DGS:</p>
 <ul>
 <li>A single image is sufficient to train a 2DGS model, unlike 3DGS, which often requires multiple views.</li>
 <li>2DGS does not require handling camera poses or parameters.</li>
 <li>In 2DGS, a single color is assigned to each Gaussian, whereas 3DGS uses spherical harmonics to model view-dependent appearance.</li>
-<li>For 2DGS, pixel colors are determined by a simple weighted average of Gaussian colors, eliminating the need for depth ordering or opacity attributes, which are required in 3DGS’s alpha-blended rendering.</li>
+<li>In 2DGS, pixel colors are determined by a simple weighted average of Gaussian colors, eliminating the need for depth ordering or opacity attributes required in 3DGS’s alpha-blended rendering.</li>
 </ul>
 <section id="problem-formulation" class="level2">
 <h2 class="anchored" data-anchor-id="problem-formulation">Problem Formulation</h2>
-<p>A 2D Gaussian has a mean vector <span class="math inline">\(\mu\in\mathbb{R}^2\)</span> and a covariance matrix <span class="math inline">\(\Sigma\in\mathbb{R}^{2 \times 2}\)</span>. The density is expressed as <span class="math display">\[
-G(x)=\exp\left(-\dfrac{1}{2}(x-\mu)^T\Sigma^{-1}(x-\mu)\right)
-\]</span> where <span class="math inline">\(x\)</span> is the pixel location. Note that this is not a probability density, so it doesn’t need to be normalized.</p>
-<p>Usually, people use <span class="math inline">\(\Sigma=RSS^TR^T\)</span> to ensure <span class="math inline">\(\Sigma\)</span> is always positive semi-definite during training. <span class="math inline">\(R\in\mathbb{R}^{2\times2}\)</span> is a rotation matrix, and <span class="math inline">\(S\in\mathbb{R}^{2\times2}\)</span> is a scaling matrix. <span class="math inline">\(R\)</span> is parameterized by an angle <span class="math inline">\(\theta\in[0,\pi]\)</span>, and <span class="math inline">\(S\)</span> is determined by a scaling vector <span class="math inline">\(s\in\mathbb{R}^2_+\)</span>.</p>
-<p>Next, we need to assign a color to each Gaussian. Unlike 3DGS, which uses spherical harmonics, we only need a vector <span class="math inline">\(c\in\mathbb{R}^3\)</span> to represent the RGB values of a 2D Gaussian.</p>
-<p>In the end, a 2D Gaussian primitive is characterized by <span class="math inline">\((\mu, \theta, s, c)\)</span>. Each pixel value <span class="math inline">\(\mathbf{RGB}(x)\)</span> is determined by a weighted average of all the Gaussians where the weights are computed by the density function <span class="math inline">\(G(x)\)</span>: <span class="math display">\[
-\mathbf{RGB}(x)=\dfrac{1}{\sum_i G_i(x)}\sum_i G_i(x)c_i
+<p>A 2D Gaussian has a mean vector <span class="math inline">\(\mu\in\mathbb{R}^2\)</span> and a covariance matrix <span class="math inline">\(\Sigma\in\mathbb{R}^{2 \times 2}\)</span>. The density is <span class="math display">\[
+G(x)=\exp\left(-\dfrac{1}{2}(x-\mu)^T\Sigma^{-1}(x-\mu)\right),
+\]</span> where <span class="math inline">\(x\)</span> is the pixel location. This is not a probability density, so it does not need to be normalized.</p>
+<p>A common parameterization uses <span class="math inline">\(\Sigma = R S S^T R^T\)</span> to ensure <span class="math inline">\(\Sigma\)</span> is always positive semi-definite during training. <span class="math inline">\(R\in\mathbb{R}^{2\times2}\)</span> is a rotation matrix parameterized by an angle <span class="math inline">\(\theta\in[0,\pi]\)</span>, and <span class="math inline">\(S\in\mathbb{R}^{2\times2}\)</span> is a scaling matrix determined by a scaling vector <span class="math inline">\(s\in\mathbb{R}^2_+\)</span>.</p>
+<p>Next, we assign a color to each Gaussian. Unlike 3DGS, which uses spherical harmonics, we only need a vector <span class="math inline">\(c\in\mathbb{R}^3\)</span> to represent RGB values.</p>
+<p>Thus, a 2D Gaussian primitive is characterized by <span class="math inline">\((\mu, \theta, s, c)\)</span>. Each pixel value <span class="math inline">\(\mathbf{RGB}(x)\)</span> is a weighted average of all Gaussians, with weights given by <span class="math inline">\(G_i(x)\)</span>: <span class="math display">\[
+\mathbf{RGB}(x)=\dfrac{1}{\sum_i G_i(x)}\sum_i G_i(x)c_i.
 \]</span></p>
 </section>
 <section id="implementation" class="level2">
 <h2 class="anchored" data-anchor-id="implementation">Implementation</h2>
-<p>First, we randomly initialize all the Gaussian parameters. We use a total of 5000 Gaussians. Using more Gaussians improves quality but also increases memory usage.</p>
+<p>First, we randomly initialize all Gaussian parameters. We use 5000 Gaussians. Using more Gaussians improves quality but increases memory usage.</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1"></a>_GS_NUM <span class="op">=</span> <span class="dv">5000</span></span>
 <span id="cb1-2"><a href="#cb1-2"></a>key <span class="op">=</span> jax.random.PRNGKey(<span class="dv">0</span>)</span>
 <span id="cb1-3"><a href="#cb1-3"></a>key_mu, key_theta, key_scaling, key_color <span class="op">=</span> jax.random.split(key, <span class="dv">4</span>)</span>
@@ -239,29 +239,26 @@ G(x)=\exp\left(-\dfrac{1}{2}(x-\mu)^T\Sigma^{-1}(x-\mu)\right)
 <span id="cb1-7"><a href="#cb1-7"></a>    key_scaling, (_GS_NUM, <span class="dv">2</span>), minval<span class="op">=</span><span class="fl">0.0</span>, maxval<span class="op">=</span><span class="fl">0.1</span></span>
 <span id="cb1-8"><a href="#cb1-8"></a>)</span>
 <span id="cb1-9"><a href="#cb1-9"></a>color_array <span class="op">=</span> jax.random.uniform(key_color, (_GS_NUM, <span class="dv">3</span>), minval<span class="op">=</span><span class="fl">0.0</span>, maxval<span class="op">=</span><span class="fl">255.0</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Next, we implement the key part of the training code: a function to compute the Gaussian density. We will implement the function for computing the density of a single Gaussian at a single pixel location. We then use three layers of <code>jax.vmap</code> to vectorize the function, allowing a single call to compute the density for all Gaussians at all locations.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1"></a><span class="at">@partial</span>(jax.vmap, in_axes<span class="op">=</span>(<span class="va">None</span>, <span class="va">None</span>, <span class="va">None</span>, <span class="dv">0</span>))  <span class="co"># map over height dimension</span></span>
-<span id="cb2-2"><a href="#cb2-2"></a><span class="at">@partial</span>(jax.vmap, in_axes<span class="op">=</span>(<span class="va">None</span>, <span class="va">None</span>, <span class="va">None</span>, <span class="dv">0</span>))  <span class="co"># map over width dimension</span></span>
-<span id="cb2-3"><a href="#cb2-3"></a><span class="at">@partial</span>(jax.vmap, in_axes<span class="op">=</span>(<span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="va">None</span>))  <span class="co"># map over gaussians</span></span>
+<p>Next, we implement the key part of the training code: a function to compute the Gaussian density. We implement the function for a single Gaussian at a single pixel location, then use three layers of <code>jax.vmap</code> to vectorize it so one call computes the density for all Gaussians at all locations.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1"></a><span class="at">@partial</span>(jax.vmap, in_axes<span class="op">=</span>(<span class="va">None</span>, <span class="va">None</span>, <span class="va">None</span>, <span class="dv">0</span>))  <span class="co"># map over height</span></span>
+<span id="cb2-2"><a href="#cb2-2"></a><span class="at">@partial</span>(jax.vmap, in_axes<span class="op">=</span>(<span class="va">None</span>, <span class="va">None</span>, <span class="va">None</span>, <span class="dv">0</span>))  <span class="co"># map over width</span></span>
+<span id="cb2-3"><a href="#cb2-3"></a><span class="at">@partial</span>(jax.vmap, in_axes<span class="op">=</span>(<span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="va">None</span>))        <span class="co"># map over Gaussians</span></span>
 <span id="cb2-4"><a href="#cb2-4"></a><span class="kw">def</span> compute_gaussians(mu, theta, scaling, coord):</span>
 <span id="cb2-5"><a href="#cb2-5"></a>    <span class="co">"""Compute the value of a single Gaussian at the given coordinate."""</span></span>
 <span id="cb2-6"><a href="#cb2-6"></a>    <span class="co"># rotation matrix</span></span>
-<span id="cb2-7"><a href="#cb2-7"></a>    <span class="co"># clip theta to the range [0, pi]</span></span>
-<span id="cb2-8"><a href="#cb2-8"></a>    theta <span class="op">=</span> jnp.clip(theta, <span class="fl">0.0</span>, jnp.pi)</span>
-<span id="cb2-9"><a href="#cb2-9"></a>    c <span class="op">=</span> jnp.cos(theta[<span class="dv">0</span>])</span>
-<span id="cb2-10"><a href="#cb2-10"></a>    s <span class="op">=</span> jnp.sin(theta[<span class="dv">0</span>])</span>
-<span id="cb2-11"><a href="#cb2-11"></a>    R <span class="op">=</span> jnp.array([[c, <span class="op">-</span>s], [s, c]])</span>
-<span id="cb2-12"><a href="#cb2-12"></a>    <span class="co"># scaling matrix</span></span>
-<span id="cb2-13"><a href="#cb2-13"></a>    <span class="co"># clip scaling to be positive</span></span>
-<span id="cb2-14"><a href="#cb2-14"></a>    scaling <span class="op">=</span> jnp.clip(scaling, <span class="bu">min</span><span class="op">=</span><span class="fl">1e-6</span>, <span class="bu">max</span><span class="op">=</span><span class="va">None</span>)</span>
-<span id="cb2-15"><a href="#cb2-15"></a>    S <span class="op">=</span> jnp.diag(scaling)</span>
-<span id="cb2-16"><a href="#cb2-16"></a>    <span class="co"># covariance matrix</span></span>
-<span id="cb2-17"><a href="#cb2-17"></a>    <span class="co"># add small value for numerical stability</span></span>
-<span id="cb2-18"><a href="#cb2-18"></a>    Sigma <span class="op">=</span> R <span class="op">@</span> S <span class="op">@</span> S <span class="op">@</span> R.T <span class="op">+</span> <span class="fl">1e-6</span> <span class="op">*</span> jnp.eye(<span class="dv">2</span>)</span>
-<span id="cb2-19"><a href="#cb2-19"></a>    diff <span class="op">=</span> coord <span class="op">-</span> mu</span>
-<span id="cb2-20"><a href="#cb2-20"></a>    exponent <span class="op">=</span> <span class="op">-</span><span class="fl">0.5</span> <span class="op">*</span> diff <span class="op">@</span> jnp.linalg.inv(Sigma) <span class="op">@</span> diff.T</span>
-<span id="cb2-21"><a href="#cb2-21"></a>    <span class="cf">return</span> jnp.exp(exponent)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>With <code>compute_gaussians</code> implemented, it is easy to finish the rendering function. It basically computes a weighted average of all Gaussian colors for each pixel. <code>@jax.jit</code> is needed to compile and accelerate the rendering call.</p>
+<span id="cb2-7"><a href="#cb2-7"></a>    theta <span class="op">=</span> jnp.clip(theta, <span class="fl">0.0</span>, jnp.pi)</span>
+<span id="cb2-8"><a href="#cb2-8"></a>    c <span class="op">=</span> jnp.cos(theta[<span class="dv">0</span>])</span>
+<span id="cb2-9"><a href="#cb2-9"></a>    s <span class="op">=</span> jnp.sin(theta[<span class="dv">0</span>])</span>
+<span id="cb2-10"><a href="#cb2-10"></a>    R <span class="op">=</span> jnp.array([[c, <span class="op">-</span>s], [s, c]])</span>
+<span id="cb2-11"><a href="#cb2-11"></a>    <span class="co"># scaling matrix</span></span>
+<span id="cb2-12"><a href="#cb2-12"></a>    scaling <span class="op">=</span> jnp.clip(scaling, <span class="bu">min</span><span class="op">=</span><span class="fl">1e-6</span>)</span>
+<span id="cb2-13"><a href="#cb2-13"></a>    S <span class="op">=</span> jnp.diag(scaling)</span>
+<span id="cb2-14"><a href="#cb2-14"></a>    <span class="co"># covariance matrix</span></span>
+<span id="cb2-15"><a href="#cb2-15"></a>    Sigma <span class="op">=</span> R <span class="op">@</span> S <span class="op">@</span> S <span class="op">@</span> R.T <span class="op">+</span> <span class="fl">1e-6</span> <span class="op">*</span> jnp.eye(<span class="dv">2</span>)</span>
+<span id="cb2-16"><a href="#cb2-16"></a>    diff <span class="op">=</span> coord <span class="op">-</span> mu</span>
+<span id="cb2-17"><a href="#cb2-17"></a>    exponent <span class="op">=</span> <span class="op">-</span><span class="fl">0.5</span> <span class="op">*</span> diff <span class="op">@</span> jnp.linalg.inv(Sigma) <span class="op">@</span> diff.T</span>
+<span id="cb2-18"><a href="#cb2-18"></a>    <span class="cf">return</span> jnp.exp(exponent)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>With <code>compute_gaussians</code> implemented, we finish the rendering function. It computes a weighted average of all Gaussian colors for each pixel. <code>@jax.jit</code> compiles and accelerates the call.</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1"></a><span class="at">@jax.jit</span></span>
 <span id="cb3-2"><a href="#cb3-2"></a><span class="kw">def</span> render_image(mu_array, theta_array, scaling_array, color_array, coords):</span>
 <span id="cb3-3"><a href="#cb3-3"></a>    <span class="co">"""Render the image from the parameters."""</span></span>
@@ -271,16 +268,16 @@ G(x)=\exp\left(-\dfrac{1}{2}(x-\mu)^T\Sigma^{-1}(x-\mu)\right)
 <span id="cb3-7"><a href="#cb3-7"></a>        jnp.<span class="bu">sum</span>(gaussians, axis<span class="op">=-</span><span class="dv">1</span>, keepdims<span class="op">=</span><span class="va">True</span>) <span class="op">+</span> <span class="fl">1e-6</span></span>
 <span id="cb3-8"><a href="#cb3-8"></a>    )</span>
 <span id="cb3-9"><a href="#cb3-9"></a>    <span class="cf">return</span> jnp.clip(rendered_image, <span class="dv">0</span>, <span class="dv">255</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>The image below illustrates the rendering of two random Gaussians. Notice how colors blend at the intersection. High-quality image rendering typically utilizes tens of thousands of Gaussians.</p>
+<p>The image below illustrates the rendering of two random Gaussians. Notice how the colors blend at the intersection. High-quality image rendering typically uses tens of thousands of Gaussians.</p>
 <p><img src="gs.png" class="img-fluid"></p>
-<p><code>render_image</code> is implemented in a differentiable way. We can compute the loss by comparing the reconstructed image against the target image. Either <span class="math inline">\(L_1\)</span> loss or MSE will work. It is now straightforward to implement the training loop in the <code>main</code> function. We can summarize the training code as follows:</p>
+<p>The function <code>render_image</code> is differentiable. We compute the loss by comparing the reconstructed image with the target image. Either <span class="math inline">\(L_1\)</span> loss or MSE works. It is straightforward to implement the training loop in the <code>main</code> function. Summary:</p>
 <ul>
-<li>Initialize the gaussians</li>
-<li>loop
+<li>Initialize the Gaussians</li>
+<li>Loop:
 <ul>
-<li>render the image</li>
-<li>compute l1 loss and gradients</li>
-<li>update gaussian parameters</li>
+<li>Render the image</li>
+<li>Compute L1 loss and gradients</li>
+<li>Update Gaussian parameters</li>
 </ul></li>
 </ul>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1"></a>_SIZE <span class="op">=</span> <span class="dv">128</span></span>
@@ -326,11 +323,12 @@ G(x)=\exp\left(-\dfrac{1}{2}(x-\mu)^T\Sigma^{-1}(x-\mu)\right)
 <span id="cb4-41"><a href="#cb4-41"></a>    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(_ITERATIONS):</span>
 <span id="cb4-42"><a href="#cb4-42"></a>        params, opt_state <span class="op">=</span> update(params, opt_state)</span>
 <span id="cb4-43"><a href="#cb4-43"></a>        current_loss <span class="op">=</span> loss_fn(params)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>You can find the complete code in <a href="https://github.com/tomondev/image-gs-toy-example"><img src="https://img.shields.io/static/v1.svg?logo=github&amp;label=Repo&amp;message=View%20On%20Github&amp;color=lightgrey" class="img-fluid" alt="View filled on Github"></a></p>
+<p>You can find the complete code here:<br>
+<a href="https://github.com/tomondev/image-gs-toy-example"><img src="https://img.shields.io/static/v1.svg?logo=github&amp;label=Repo&amp;message=View%20On%20Github&amp;color=lightgrey" class="img-fluid" alt="View on Github"></a></p>
 </section>
 <section id="target-image" class="level2">
 <h2 class="anchored" data-anchor-id="target-image">Target Image</h2>
-<p>Here is our target image with a size of 128x128.</p>
+<p>Here is the target image (128×128):</p>
 <p><img src="input.jpg" class="img-fluid"></p>
 </section>
 <section id="results" class="level2">
@@ -338,17 +336,17 @@ G(x)=\exp\left(-\dfrac{1}{2}(x-\mu)^T\Sigma^{-1}(x-\mu)\right)
 <p>The first image is the target image. The last image is from iteration 1000.</p>
 <p><img src="progression.png" class="img-fluid"></p>
 <section id="animation" class="level3">
-<h3 class="anchored" data-anchor-id="animation">animation</h3>
+<h3 class="anchored" data-anchor-id="animation">Animation</h3>
 <p><img src="progression.gif" class="img-fluid"></p>
 </section>
 </section>
 <section id="important-notes" class="level2">
 <h2 class="anchored" data-anchor-id="important-notes">Important Notes</h2>
-<p>The current implementation is inefficient and overly simplistic. Improvements can be made in the following aspects:</p>
-<p>To enhance efficiency, we can avoid evaluating all Gaussians for every pixel. Gaussians located far from a pixel contribute negligibly to its color. A more efficient approach involves selecting the K Gaussians with the highest density at a given pixel. However, identifying and managing K Gaussians for each individual pixel might be too resource-intensive. A more pragmatic solution is to generate K Gaussians for a specific tile, while ensuring that Gaussians spanning multiple tiles are managed appropriately.</p>
-<p>It is not optimal to initialize the Gaussians randomly. Instead, we can initialize the geometry and color of the Gaussians according to pixel intensity and gradients in the target image. This will likely lead to faster convergence and better reconstruction quality.</p>
-<p>Last but not least, the number of Gaussians doesn’t have to be fixed. In each iteration, we can remove some Gaussians whose contributions are negligible and create new Gaussians at pixels where reconstruction errors are high.</p>
-<p>To summarize, this is a basic example that illustrates how Gaussian splatting works. Many improvements can be added to render a high-quality image more efficiently.</p>
+<p>The current implementation is inefficient and overly simplistic. Improvements can be made in the following areas:</p>
+<p>To enhance efficiency, we can avoid evaluating all Gaussians for every pixel. Gaussians far from a pixel contribute negligibly to its color. A more efficient approach would be to select the K Gaussians with the highest density at a pixel. However, identifying and managing K Gaussians per pixel may be too resource-intensive. A pragmatic solution is to generate K Gaussians per tile, while ensuring Gaussians spanning multiple tiles are handled properly.</p>
+<p>Random initialization is not optimal. We can initialize Gaussian geometry and color based on pixel intensity and gradients in the target image. This likely leads to faster convergence and better reconstruction quality.</p>
+<p>The number of Gaussians does not need to be fixed. In each iteration, we can remove Gaussians whose contributions are negligible and create new ones at pixels with high reconstruction error.</p>
+<p>In summary, this is a basic example illustrating how Gaussian splatting works. Many improvements can be implemented to render a high-quality image more efficiently.</p>
 
 
 </section>

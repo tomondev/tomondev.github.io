@@ -2,6 +2,7 @@
   {
     "listing": "/index.html",
     "items": [
+      "/posts/spherical-harmonics/index.html",
       "/posts/image-2dgs/index.html"
     ]
   }
