@@ -4,34 +4,34 @@ date: 2025-08-01
 author: Tom
 ---
 
-[3D Gaussian Splatting](https://huggingface.co/blog/gaussian-splatting) (3DGS) is a rendering technique for photorealistic view synthesis. In this post, we will create a toy example of 2D Gaussian splatting (2DGS). We will train a 2DGS model to render a small image. This 2D version strips away much of the complexity found in 3DGS, making the core ideas much easier to understand.
+[3D Gaussian Splatting](https://huggingface.co/blog/gaussian-splatting) (3DGS) is a rendering technique for photorealistic view synthesis. In this post, we create a toy example of 2D Gaussian splatting (2DGS). We train a 2DGS model to render a small image. This 2D version removes much of the complexity found in 3DGS, making the core ideas easier to understand.
 
 Here are some key differences between 2DGS and 3DGS:
 
 - A single image is sufficient to train a 2DGS model, unlike 3DGS, which often requires multiple views.
 - 2DGS does not require handling camera poses or parameters.
 - In 2DGS, a single color is assigned to each Gaussian, whereas 3DGS uses spherical harmonics to model view-dependent appearance.
-- For 2DGS, pixel colors are determined by a simple weighted average of Gaussian colors, eliminating the need for depth ordering or opacity attributes, which are required in 3DGS's alpha-blended rendering.
+- In 2DGS, pixel colors are determined by a simple weighted average of Gaussian colors, eliminating the need for depth ordering or opacity attributes required in 3DGS's alpha-blended rendering.
 
 ## Problem Formulation
-A 2D Gaussian has a mean vector $\mu\in\mathbb{R}^2$ and a covariance matrix $\Sigma\in\mathbb{R}^{2 \times 2}$. The density is expressed as
+A 2D Gaussian has a mean vector $\mu\in\mathbb{R}^2$ and a covariance matrix $\Sigma\in\mathbb{R}^{2 \times 2}$. The density is
 $$
-G(x)=\exp\left(-\dfrac{1}{2}(x-\mu)^T\Sigma^{-1}(x-\mu)\right)
+G(x)=\exp\left(-\dfrac{1}{2}(x-\mu)^T\Sigma^{-1}(x-\mu)\right),
 $$
-where $x$ is the pixel location. Note that this is not a probability density, so it doesn't need to be normalized.
+where $x$ is the pixel location. This is not a probability density, so it does not need to be normalized.
 
-Usually, people use $\Sigma=RSS^TR^T$ to ensure $\Sigma$ is always positive semi-definite during training. $R\in\mathbb{R}^{2\times2}$ is a rotation matrix, and $S\in\mathbb{R}^{2\times2}$ is a scaling matrix. $R$ is parameterized by an angle $\theta\in[0,\pi]$, and $S$ is determined by a scaling vector $s\in\mathbb{R}^2_+$.
+A common parameterization uses $\Sigma = R S S^T R^T$ to ensure $\Sigma$ is always positive semi-definite during training. $R\in\mathbb{R}^{2\times2}$ is a rotation matrix parameterized by an angle $\theta\in[0,\pi]$, and $S\in\mathbb{R}^{2\times2}$ is a scaling matrix determined by a scaling vector $s\in\mathbb{R}^2_+$.
 
-Next, we need to assign a color to each Gaussian. Unlike 3DGS, which uses spherical harmonics, we only need a vector $c\in\mathbb{R}^3$ to represent the RGB values of a 2D Gaussian.
+Next, we assign a color to each Gaussian. Unlike 3DGS, which uses spherical harmonics, we only need a vector $c\in\mathbb{R}^3$ to represent RGB values.
 
-In the end, a 2D Gaussian primitive is characterized by $(\mu, \theta, s, c)$. Each pixel value $\mathbf{RGB}(x)$ is determined by a weighted average of all the Gaussians where the weights are computed by the density function $G(x)$:
+Thus, a 2D Gaussian primitive is characterized by $(\mu, \theta, s, c)$. Each pixel value $\mathbf{RGB}(x)$ is a weighted average of all Gaussians, with weights given by $G_i(x)$:
 $$
-\mathbf{RGB}(x)=\dfrac{1}{\sum_i G_i(x)}\sum_i G_i(x)c_i
+\mathbf{RGB}(x)=\dfrac{1}{\sum_i G_i(x)}\sum_i G_i(x)c_i.
 $$
 
 ## Implementation
 
-First, we randomly initialize all the Gaussian parameters. We use a total of 5000 Gaussians. Using more Gaussians improves quality but also increases memory usage.
+First, we randomly initialize all Gaussian parameters. We use 5000 Gaussians. Using more Gaussians improves quality but increases memory usage.
 
 ```python
 _GS_NUM = 5000
@@ -45,33 +45,30 @@ scaling_array = jax.random.uniform(
 color_array = jax.random.uniform(key_color, (_GS_NUM, 3), minval=0.0, maxval=255.0)
 ```
 
-Next, we implement the key part of the training code: a function to compute the Gaussian density. We will implement the function for computing the density of a single Gaussian at a single pixel location. We then use three layers of `jax.vmap` to vectorize the function, allowing a single call to compute the density for all Gaussians at all locations.
+Next, we implement the key part of the training code: a function to compute the Gaussian density. We implement the function for a single Gaussian at a single pixel location, then use three layers of `jax.vmap` to vectorize it so one call computes the density for all Gaussians at all locations.
 
 ```python
-@partial(jax.vmap, in_axes=(None, None, None, 0))  # map over height dimension
-@partial(jax.vmap, in_axes=(None, None, None, 0))  # map over width dimension
-@partial(jax.vmap, in_axes=(0, 0, 0, None))  # map over gaussians
+@partial(jax.vmap, in_axes=(None, None, None, 0))  # map over height
+@partial(jax.vmap, in_axes=(None, None, None, 0))  # map over width
+@partial(jax.vmap, in_axes=(0, 0, 0, None))        # map over Gaussians
 def compute_gaussians(mu, theta, scaling, coord):
     """Compute the value of a single Gaussian at the given coordinate."""
     # rotation matrix
-    # clip theta to the range [0, pi]
     theta = jnp.clip(theta, 0.0, jnp.pi)
     c = jnp.cos(theta[0])
     s = jnp.sin(theta[0])
     R = jnp.array([[c, -s], [s, c]])
     # scaling matrix
-    # clip scaling to be positive
-    scaling = jnp.clip(scaling, min=1e-6, max=None)
+    scaling = jnp.clip(scaling, min=1e-6)
     S = jnp.diag(scaling)
     # covariance matrix
-    # add small value for numerical stability
     Sigma = R @ S @ S @ R.T + 1e-6 * jnp.eye(2)
     diff = coord - mu
     exponent = -0.5 * diff @ jnp.linalg.inv(Sigma) @ diff.T
     return jnp.exp(exponent)
 ```
 
-With `compute_gaussians` implemented, it is easy to finish the rendering function. It basically computes a weighted average of all Gaussian colors for each pixel. `@jax.jit` is needed to compile and accelerate the rendering call.
+With `compute_gaussians` implemented, we finish the rendering function. It computes a weighted average of all Gaussian colors for each pixel. `@jax.jit` compiles and accelerates the call.
 
 ```python
 @jax.jit
@@ -85,21 +82,17 @@ def render_image(mu_array, theta_array, scaling_array, color_array, coords):
     return jnp.clip(rendered_image, 0, 255)
 ```
 
-The image below illustrates the rendering of two random Gaussians. Notice how colors blend at the intersection. High-quality image rendering typically utilizes tens of thousands of Gaussians.
+The image below illustrates the rendering of two random Gaussians. Notice how the colors blend at the intersection. High-quality image rendering typically uses tens of thousands of Gaussians.
 
 ![](gs.png)
 
+The function `render_image` is differentiable. We compute the loss by comparing the reconstructed image with the target image. Either $L_1$ loss or MSE works. It is straightforward to implement the training loop in the `main` function. Summary:
 
-
-`render_image` is implemented in a differentiable way. We can compute the loss by comparing the reconstructed image against the target image. Either $L_1$ loss or MSE will work. It is now straightforward to implement the training loop in the `main` function. We can summarize the training code as follows:
-
-- Initialize the gaussians
-- loop
-   - render the image
-   - compute l1 loss and gradients
-   - update gaussian parameters
-
-
+- Initialize the Gaussians
+- Loop:
+  - Render the image
+  - Compute L1 loss and gradients
+  - Update Gaussian parameters
 
 ```python
 _SIZE = 128
@@ -147,12 +140,12 @@ def main():
         current_loss = loss_fn(params)
 ```
 
-You can find the complete code in 
-[![View filled on Github](https://img.shields.io/static/v1.svg?logo=github&label=Repo&message=View%20On%20Github&color=lightgrey)](https://github.com/tomondev/image-gs-toy-example)
+You can find the complete code here:  
+[![View on Github](https://img.shields.io/static/v1.svg?logo=github&label=Repo&message=View%20On%20Github&color=lightgrey)](https://github.com/tomondev/image-gs-toy-example)
 
 ## Target Image
 
-Here is our target image with a size of 128x128.
+Here is the target image (128×128):
 
 ![](input.jpg)
 
@@ -162,18 +155,18 @@ The first image is the target image. The last image is from iteration 1000.
 
 ![](progression.png)
 
-### animation
+### Animation
 
 ![](progression.gif)
 
 ## Important Notes
 
-The current implementation is inefficient and overly simplistic. Improvements can be made in the following aspects:
+The current implementation is inefficient and overly simplistic. Improvements can be made in the following areas:
 
-To enhance efficiency, we can avoid evaluating all Gaussians for every pixel. Gaussians located far from a pixel contribute negligibly to its color. A more efficient approach involves selecting the K Gaussians with the highest density at a given pixel. However, identifying and managing K Gaussians for each individual pixel might be too resource-intensive. A more pragmatic solution is to generate K Gaussians for a specific tile, while ensuring that Gaussians spanning multiple tiles are managed appropriately.
+To enhance efficiency, we can avoid evaluating all Gaussians for every pixel. Gaussians far from a pixel contribute negligibly to its color. A more efficient approach would be to select the K Gaussians with the highest density at a pixel. However, identifying and managing K Gaussians per pixel may be too resource-intensive. A pragmatic solution is to generate K Gaussians per tile, while ensuring Gaussians spanning multiple tiles are handled properly.
 
-It is not optimal to initialize the Gaussians randomly. Instead, we can initialize the geometry and color of the Gaussians according to pixel intensity and gradients in the target image. This will likely lead to faster convergence and better reconstruction quality.
+Random initialization is not optimal. We can initialize Gaussian geometry and color based on pixel intensity and gradients in the target image. This likely leads to faster convergence and better reconstruction quality.
 
-Last but not least, the number of Gaussians doesn't have to be fixed. In each iteration, we can remove some Gaussians whose contributions are negligible and create new Gaussians at pixels where reconstruction errors are high.
+The number of Gaussians does not need to be fixed. In each iteration, we can remove Gaussians whose contributions are negligible and create new ones at pixels with high reconstruction error.
 
-To summarize, this is a basic example that illustrates how Gaussian splatting works. Many improvements can be added to render a high-quality image more efficiently.
+In summary, this is a basic example illustrating how Gaussian splatting works. Many improvements can be implemented to render a high-quality image more efficiently.

@@ -2,28 +2,28 @@
 title: "Spherical Harmonics and 3D Gaussian Splatting Rendering"
 date: 2025-09-01
 author: Tom
-draft: true
+draft: false
 ---
 
 
 
 # Introduction
 
-In the example of [2D Gaussian Splatting](https://tomondev.github.io/posts/image-2dgs/), we use a vector $c\in\mathbb{R}^3$ to represent the color of a 2D Gaussian. In the 2D case, a Gaussian shows the same color regardless of the viewing direction. In 3D Gaussian Splatting(3DGS), however, it is common for us to model view dependent appearances, such as Lambertian or glossy surfaces. Therefore, we cannot assign fixed RGB values to each 3D Gaussian, as the color must change based on the viewer's perspective.
+In the example of [2D Gaussian Splatting](https://tomondev.github.io/posts/image-2dgs/), we use a vector $c\in\mathbb{R}^3$ to represent the color of a 2D Gaussian. In the 2D case, a Gaussian shows the same color regardless of the viewing direction. In 3D Gaussian Splatting (3DGS), however, it is common to model view-dependent appearance (e.g., Lambertian or glossy surfaces). Therefore, we cannot assign fixed RGB values to each 3D Gaussian, because the color must change based on the viewer's perspective.
 
-Intuitively, modeling arbitrary view-dependent appearance requires defining a function on the surface of a sphere. While a straightforward approach is to discretize the sphere with a grid and assign a value to each cell, this method introduces a prohibitive number of parameters for each Gaussian, not to mention that we can potentially have tens of thousands Gaussians in a scene.
+Intuitively, modeling arbitrary view-dependent appearance requires defining a function on the surface of a sphere. While a straightforward approach is to discretize the sphere with a grid and assign a value to each cell, this method introduces a prohibitive number of parameters for each Gaussian—not to mention that we may have tens of thousands of Gaussians in a scene.
 
-A natural approach is to parameterize the spherical function by using a set of basis functions. Just as one-dimensional periodic functions on a circle can be expressed as a sum of circular functions (sines and cosines) via Fourier series, spherical functions can be represented as a sum of [spherical harmonics](https://en.wikipedia.org/wiki/Spherical_harmonics), which are a set of orthogonal functions defined on the surface of a sphere.
+A natural approach is to parameterize the spherical function using a set of basis functions. Just as one-dimensional periodic functions on a circle can be expressed as a sum of circular functions (sines and cosines) via Fourier series, spherical functions can be represented as a sum of [spherical harmonics](https://en.wikipedia.org/wiki/Spherical_harmonics), which are a set of orthogonal functions defined on the surface of a sphere.
 
 # Spherical Harmonics
 
-Given spherical coordinates $(\theta,\varphi)$ on a unit sphere, spherical harmonics(SH) are defined as
+Given spherical coordinates $(\theta,\varphi)$ on a unit sphere, spherical harmonics (SH) are defined as
 $$
 Y_{l}^{m}(\theta, \varphi) = \sqrt{\frac{2l+1}{4\pi} \frac{(l-m)!}{(l+m)!}} P_{l}^{m}(\cos\theta) e^{i m \varphi}
 $$
 where:
 
-- $l$ is the degree (integer $\ge0$ ).
+- $l$ is the degree (an integer $\ge 0$).
 
 - $m$ is an integer, $−l\le m\le l$.
 
@@ -33,7 +33,7 @@ where:
 
 - $P_l^m(x)$ are the [Associated Legendre Polynomials](https://en.wikipedia.org/wiki/Associated_Legendre_polynomials#The_first_few_associated_Legendre_functions).
 
-Notice that SH are complex-valued functions. Using the definition above, we derive $Y_l^m$ up to degree $l=3$.
+Notice that SH are complex-valued functions. Using the definition above, we can derive $Y_l^m$ for any given $l$ and $m$. For example:
 
 ### $l=0$
 
@@ -79,11 +79,11 @@ Y_3^{3}(\theta, \varphi) &= -\frac{1}{8} \sqrt{\frac{35}{\pi}} \cdot e^{3i\varph
 $$
 
 
-Complex-valued functions are not yet usable in our applications. The real basis of SH is defined as follows:
+Complex-valued functions are not directly usable in our applications. The real basis of SH is defined as follows:
 $$
 \mathrm{Y}_{\ell}^{m}(\theta, \varphi)=\begin{cases} \sqrt{2}(-1)^{m} \operatorname{Im}[Y_{\ell}^{|m|}] & \text{if } m<0 \\ Y_{\ell}^{0} & \text{if } m=0 \\ \sqrt{2}(-1)^{m} \operatorname{Re}[Y_{\ell}^{m}] & \text{if } m>0 \end{cases}
 $$
-Here are the visualizations of the real SH for different $l$ and $m$ values. Red and blue represent positive and negative areas, respectively.
+Below are visualizations of the real SH for different $l$ and $m$ values. Red and blue represent positive and negative regions, respectively.
 
 |       |     $m=-3$     |     $m=-2$     |     $m=-1$     |     $m=0$     |     $m=1$     |     $m=2$     |     $m=3$     |
 | ----- | :------------: | :------------: | :------------: | :-----------: | :-----------: | :-----------: | :-----------: |
@@ -92,35 +92,46 @@ Here are the visualizations of the real SH for different $l$ and $m$ values. Red
 | $l=2$ |                | ![](l2m_2.png) | ![](l2m_1.png) | ![](l2m0.png) | ![](l2m1.png) | ![](l2m2.png) |               |
 | $l=3$ | ![](l3m_3.png) | ![](l3m_2.png) | ![](l3m_1.png) | ![](l3m0.png) | ![](l3m1.png) | ![](l3m2.png) | ![](l3m3.png) |
 
-The above visualizations are created by the Colab: [![](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1h6gI3gn1ZXvsNCQYyDJ0DxFXXwH0VowB).
+The above visualizations were created using Colab: [![](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1h6gI3gn1ZXvsNCQYyDJ0DxFXXwH0VowB).
 
-# 3DGS Rendering
+# Rendering
 
-The original [3DGS paper](https://arxiv.org/abs/2308.04079) use SH of degree 2 ($l=2$), which requires 9 coefficients per color channel for a total of 27 SH coefficients per Gaussian. Generally, given a viewing angle $(\theta, \varphi)$, coefficients $k_l^m$, the color can be determined by
+The original [3DGS paper](https://arxiv.org/abs/2308.04079) uses SH of degree 2 ($l = 2$), which requires 9 coefficients per color channel for a total of 27 SH coefficients per Gaussian. More generally, given a viewing angle $(\theta, \varphi)$ and coefficients $k_l^m$, the color can be determined by
 $$
 c(\theta,\varphi,k_l^m)=\sigma\left(\sum_{l=0}^L\sum_{m=-l}^l k_l^m \mathrm{Y}_{l}^{m}(\theta, \varphi)\right)
+\tag{1}
 $$
-where $\sigma$ is the sigmoid function. The sigmoid function is used to normalize the values to $[0, 1]$.
+where $\sigma$ is the sigmoid function, used to normalize the values to $[0, 1]$.
 
-# Example
+# Experiment
+
+In this section, we use a small example to show how SH can approximate spherical functions.
+We use a world map as the target spherical function we aim to approximate. The picture is shown below. We use an equirectangular projection for visualization purposes, but the computation is performed on the surface of a sphere.
 
 ![](earth.jpg)
 
-![](output_5000_d10.png)
+Next, we sample 500 points on the sphere. These are the locations at which we approximate the target function with SH. How do we uniformly sample points on a sphere? There are many methods; here we use a simple method called the [Fibonacci lattice](https://observablehq.com/@meetamit/fibonacci-lattices).
 
-![](output_5000_d20.png)
+We randomly initialize the coefficients $k_l^m$ and compute the values at the 500 points using Equation (1). We then compare these values with the target function to compute the loss. We run the Adam optimizer to iteratively find optimal values for $k_l^m$. Detailed code is in the repository: [![View on GitHub](https://img.shields.io/static/v1.svg?logo=github&label=Repo&message=View%20On%20Github&color=lightgrey)](https://github.com/tomondev/spherical-harmonics-example)
 
-![](output_5000_d30.png)
+For each experiment, we sample 500 points and run 5,000 iterations. The results below show the approximated image at iteration 5,000 for $L = 10$, $20$, and $30$. We can see that larger $L$ helps recover more detail in the approximation.
+
+L = 10 ![](output_5000_d10.png)
+
+L = 20 ![](output_5000_d20.png)
+
+L = 30 ![](output_5000_d30.png)
+
 
 ![](progression.png)
 
+The first image is the ground truth. The sequence beginning with the second image shows how the approximation evolves as training progresses.
+
 ![](progression.gif)
 
+Animation showing the training progress.
 
-
-[![View filled on Github](https://img.shields.io/static/v1.svg?logo=github&label=Repo&message=View%20On%20Github&color=lightgrey)](https://github.com/tomondev/spherical-harmonics-example)
-
-## Reference
+## References
 
 1. [3D Gaussian Splatting for Real-Time Radiance Field Rendering](https://arxiv.org/abs/2308.04079)
 2. [PlenOctrees for Real-time Rendering of Neural Radiance Fields](https://arxiv.org/pdf/2103.14024)
