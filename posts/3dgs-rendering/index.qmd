@@ -1,0 +1,118 @@
+---
+title: "Spherical Harmonics and 3D Gaussian Splatting Rendering"
+date: 2025-09-01
+author: Tom
+draft: true
+---
+
+
+
+# Introduction
+
+In the example of [2D Gaussian Splatting](https://tomondev.github.io/posts/image-2dgs/), we use a vector $c\in\mathbb{R}^3$ to represent the color of a 2D Gaussian. In the 2D case, a Gaussian shows the same color regardless of the viewing direction. In 3D Gaussian Splatting(3DGS), however, it is common for us to model view dependent appearances, such as Lambertian or glossy surfaces. Therefore, we cannot assign fixed RGB values to each 3D Gaussian, as the color must change based on the viewer's perspective.
+
+Intuitively, modeling arbitrary view-dependent appearance requires defining a function on the surface of a sphere. While a straightforward approach is to discretize the sphere with a grid and assign a value to each cell, this method introduces a prohibitive number of parameters for each Gaussian, not to mention that we can potentially have tens of thousands Gaussians in a scene.
+
+A natural approach is to parameterize the spherical function by using a set of basis functions. Just as one-dimensional periodic functions on a circle can be expressed as a sum of circular functions (sines and cosines) via Fourier series, spherical functions can be represented as a sum of [spherical harmonics](https://en.wikipedia.org/wiki/Spherical_harmonics), which are a set of orthogonal functions defined on the surface of a sphere.
+
+# Spherical Harmonics
+
+Given spherical coordinates $(\theta,\varphi)$ on a unit sphere, spherical harmonics(SH) are defined as
+$$
+Y_{l}^{m}(\theta, \varphi) = \sqrt{\frac{2l+1}{4\pi} \frac{(l-m)!}{(l+m)!}} P_{l}^{m}(\cos\theta) e^{i m \varphi}
+$$
+where:
+
+- $l$ is the degree (integer $\ge0$ ).
+
+- $m$ is an integer, $−l\le m\le l$.
+
+- $\theta$ is the polar angle (colatitude), $0\le\theta\le\pi$.
+
+- $\varphi$ is the azimuthal angle (longitude), $0\le\varphi<2\pi$.
+
+- $P_l^m(x)$ are the [Associated Legendre Polynomials](https://en.wikipedia.org/wiki/Associated_Legendre_polynomials#The_first_few_associated_Legendre_functions).
+
+Notice that SH are complex-valued functions. Using the definition above, we derive $Y_l^m$ up to degree $l=3$.
+
+### $l=0$
+
+$$
+Y_0^0(\theta, \varphi) = \frac{1}{2}\sqrt{\frac{1}{\pi}}
+$$
+
+### $l=1$
+
+$$
+\begin{align}
+Y_1^{-1}(\theta, \varphi) &= \frac{1}{2}\sqrt{\frac{3}{2\pi}} \cdot \mathrm{e}^{-i\varphi} \cdot \sin \theta \\
+Y_1^0(\theta, \varphi) &= \frac{1}{2}\sqrt{\frac{3}{\pi}} \cdot \cos \theta \\
+Y_1^1(\theta, \varphi) &= -\frac{1}{2}\sqrt{\frac{3}{2\pi}} \cdot \mathrm{e}^{i\varphi} \cdot \sin \theta
+\end{align}
+$$
+
+### $l=2$
+
+$$
+\begin{align}
+Y_2^{-2}(\theta, \varphi) &= \frac{1}{4}\sqrt{\frac{15}{2\pi}} \cdot \mathrm{e}^{-2i\varphi} \cdot \sin^2 \theta \\
+Y_2^{-1}(\theta, \varphi) &= \frac{1}{2}\sqrt{\frac{15}{2\pi}} \cdot \mathrm{e}^{-i\varphi} \cdot \sin \theta \cdot \cos \theta \\
+Y_2^0(\theta, \varphi) &= \frac{1}{4}\sqrt{\frac{5}{\pi}} (3 \cos^2 \theta - 1) \\
+Y_2^1(\theta, \varphi) &= -\frac{1}{2}\sqrt{\frac{15}{2\pi}} \cdot \mathrm{e}^{i\varphi} \cdot \sin \theta \cdot \cos \theta \\
+Y_2^2(\theta, \varphi) &= \frac{1}{4}\sqrt{\frac{15}{2\pi}} \cdot \mathrm{e}^{2i\varphi} \cdot \sin^2 \theta
+\end{align}
+$$
+
+
+
+$l=3$
+$$
+\begin{align}
+Y_3^{-3}(\theta, \varphi) &= \frac{1}{8} \sqrt{\frac{35}{\pi}} \cdot e^{-3i\varphi} \cdot \sin^3 \theta \\
+Y_3^{-2}(\theta, \varphi) &= \frac{1}{4} \sqrt{\frac{105}{2\pi}} \cdot e^{-2i\varphi} \cdot \sin^2 \theta \cdot \cos \theta \\
+Y_3^{-1}(\theta, \varphi) &= \frac{1}{8} \sqrt{\frac{21}{\pi}} \cdot e^{-i\varphi} \cdot \sin \theta \cdot (5 \cos^2 \theta - 1) \\
+Y_3^{0}(\theta, \varphi) &= \frac{1}{4} \sqrt{\frac{7}{\pi}} \cdot (5 \cos^3 \theta - 3 \cos \theta) \\
+Y_3^{1}(\theta, \varphi) &= -\frac{1}{8} \sqrt{\frac{21}{\pi}} \cdot e^{i\varphi} \cdot \sin \theta \cdot (5 \cos^2 \theta - 1) \\
+Y_3^{2}(\theta, \varphi) &= \frac{1}{4} \sqrt{\frac{105}{2\pi}} \cdot e^{2i\varphi} \cdot \sin^2 \theta \cdot \cos \theta \\
+Y_3^{3}(\theta, \varphi) &= -\frac{1}{8} \sqrt{\frac{35}{\pi}} \cdot e^{3i\varphi} \cdot \sin^3 \theta
+\end{align}
+$$
+
+
+Complex-valued functions are not yet usable in our applications. The real basis of SH is defined as follows:
+$$
+Y_{\ell}^{m}(\theta, \varphi)=\begin{cases} \sqrt{2}(-1)^{m} \operatorname{Im}[Y_{\ell}^{|m|}] & \text{if } m<0 \\ Y_{\ell}^{0} & \text{if } m=0 \\ \sqrt{2}(-1)^{m} \operatorname{Re}[Y_{\ell}^{m}] & \text{if } m>0 \end{cases}
+$$
+Here are the visualizations of the real SH for different $l$ and $m$ values. Red and blue represent positive and negative areas, respectively.
+
+|       |     $m=-3$     |     $m=-2$     |     $m=-1$     |     $m=0$     |     $m=1$     |     $m=2$     |     $m=3$     |
+| ----- | :------------: | :------------: | :------------: | :-----------: | :-----------: | :-----------: | :-----------: |
+| $l=0$ |                |                |                | ![](l0m0.png) |               |               |               |
+| $l=1$ |                |                | ![](l1m_1.png) | ![](l1m0.png) | ![](l1m1.png) |               |               |
+| $l=2$ |                | ![](l2m_2.png) | ![](l2m_1.png) | ![](l2m0.png) | ![](l2m1.png) | ![](l2m2.png) |               |
+| $l=3$ | ![](l3m_3.png) | ![](l3m_2.png) | ![](l3m_1.png) | ![](l3m0.png) | ![](l3m1.png) | ![](l3m2.png) | ![](l3m3.png) |
+
+The above visualizations are created by the Colab: [![](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1h6gI3gn1ZXvsNCQYyDJ0DxFXXwH0VowB).
+
+# 3DGS Rendering
+
+The original [3DGS paper](https://arxiv.org/abs/2308.04079) use SH of degree 2 ($l=2$), which requires 9 coefficients per color channel for a total of 27 SH coefficients per Gaussian. Generally, given a viewing angle $(\theta, \varphi)$, coefficients $k_l^m$, the color can be determined by
+$$
+c(\theta,\varphi,k_l^m)=\sigma\left(\sum_{l=0}^2\sum_{m=-2}^2 k_l^m Y_{l}^{m}(\theta, \varphi)\right)
+$$
+where $\sigma$ is the sigmoid function. Note that we take the real part of the SH.
+
+# Example
+
+In this section, we will use a simple example to test the rendering effect. We will render a 3DGS scene stored in a [ply file](https://drive.google.com/file/d/1GzjaYGz2jGy-ACT4Kz45Axuykd8aXsz2/view?usp=sharing) created by [Scaniverse](https://scaniverse.com/). 
+
+## Reference
+
+1. [3D Gaussian Splatting for Real-Time Radiance Field Rendering](https://arxiv.org/abs/2308.04079)
+2. [PlenOctrees for Real-time Rendering of Neural Radiance Fields](https://arxiv.org/pdf/2103.14024)
+3. [Spherical Harmonic Lighting: The Gritty Details](https://3dvar.com/Green2003Spherical.pdf)
+
+
+
+
+
