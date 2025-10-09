@@ -2,8 +2,7 @@
   {
     "listing": "/index.html",
     "items": [
-      "/posts/image-2dgs/index.html",
-      "/posts/diffusion_reverse_sampler_gaussian/index.html"
+      "/posts/image-2dgs/index.html"
     ]
   }
 ]

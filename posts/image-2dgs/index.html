@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.7.33">
+<meta name="generator" content="quarto-1.8.25">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -69,14 +69,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <meta name="quarto:offset" content="../../">
 <script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/axe/axe-check.js" type="module"></script>
 <script src="../../site_libs/quarto-html/popper.min.js"></script>
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-ea385d0e468b0dd5ea5bf0780b1290d9.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7b89279ff1a6dce999919e0e67d4d9ec.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-528204117fddde345da99c6598249467.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-d561ea539f5bb5e84c4ef8cda8106a7a.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -119,7 +120,7 @@ const typesetMath = (el) => {
     var macros = [];
     for (var i = 0; i < mathElements.length; i++) {
       var texText = mathElements[i].firstChild;
-      if (mathElements[i].tagName == "SPAN") {
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
         window.katex.render(texText.data, mathElements[i], {
           displayMode: mathElements[i].classList.contains('display'),
           throwOnError: false,
@@ -144,6 +145,8 @@ window.Quarto = {
     <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
+    <a href="../../index.html" class="navbar-brand navbar-brand-logo">
+    </a>
     <a class="navbar-brand" href="../../index.html">
     <span class="navbar-title">On Notes</span>
     </a>
@@ -227,7 +230,7 @@ G(x)=\exp\left(-\dfrac{1}{2}(x-\mu)^T\Sigma^{-1}(x-\mu)\right)
 <section id="implementation" class="level2">
 <h2 class="anchored" data-anchor-id="implementation">Implementation</h2>
 <p>First, we randomly initialize all the Gaussian parameters. We use a total of 5000 Gaussians. Using more Gaussians improves quality but also increases memory usage.</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1"></a>_GS_NUM <span class="op">=</span> <span class="dv">5000</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1"></a>_GS_NUM <span class="op">=</span> <span class="dv">5000</span></span>
 <span id="cb1-2"><a href="#cb1-2"></a>key <span class="op">=</span> jax.random.PRNGKey(<span class="dv">0</span>)</span>
 <span id="cb1-3"><a href="#cb1-3"></a>key_mu, key_theta, key_scaling, key_color <span class="op">=</span> jax.random.split(key, <span class="dv">4</span>)</span>
 <span id="cb1-4"><a href="#cb1-4"></a>mu_array <span class="op">=</span> jax.random.uniform(key_mu, (_GS_NUM, <span class="dv">2</span>), minval<span class="op">=</span><span class="fl">0.0</span>, maxval<span class="op">=</span><span class="fl">1.0</span>)</span>
@@ -235,9 +238,9 @@ G(x)=\exp\left(-\dfrac{1}{2}(x-\mu)^T\Sigma^{-1}(x-\mu)\right)
 <span id="cb1-6"><a href="#cb1-6"></a>scaling_array <span class="op">=</span> jax.random.uniform(</span>
 <span id="cb1-7"><a href="#cb1-7"></a>    key_scaling, (_GS_NUM, <span class="dv">2</span>), minval<span class="op">=</span><span class="fl">0.0</span>, maxval<span class="op">=</span><span class="fl">0.1</span></span>
 <span id="cb1-8"><a href="#cb1-8"></a>)</span>
-<span id="cb1-9"><a href="#cb1-9"></a>color_array <span class="op">=</span> jax.random.uniform(key_color, (_GS_NUM, <span class="dv">3</span>), minval<span class="op">=</span><span class="fl">0.0</span>, maxval<span class="op">=</span><span class="fl">255.0</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-9"><a href="#cb1-9"></a>color_array <span class="op">=</span> jax.random.uniform(key_color, (_GS_NUM, <span class="dv">3</span>), minval<span class="op">=</span><span class="fl">0.0</span>, maxval<span class="op">=</span><span class="fl">255.0</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Next, we implement the key part of the training code: a function to compute the Gaussian density. We will implement the function for computing the density of a single Gaussian at a single pixel location. We then use three layers of <code>jax.vmap</code> to vectorize the function, allowing a single call to compute the density for all Gaussians at all locations.</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1"></a><span class="at">@partial</span>(jax.vmap, in_axes<span class="op">=</span>(<span class="va">None</span>, <span class="va">None</span>, <span class="va">None</span>, <span class="dv">0</span>))  <span class="co"># map over height dimension</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1"></a><span class="at">@partial</span>(jax.vmap, in_axes<span class="op">=</span>(<span class="va">None</span>, <span class="va">None</span>, <span class="va">None</span>, <span class="dv">0</span>))  <span class="co"># map over height dimension</span></span>
 <span id="cb2-2"><a href="#cb2-2"></a><span class="at">@partial</span>(jax.vmap, in_axes<span class="op">=</span>(<span class="va">None</span>, <span class="va">None</span>, <span class="va">None</span>, <span class="dv">0</span>))  <span class="co"># map over width dimension</span></span>
 <span id="cb2-3"><a href="#cb2-3"></a><span class="at">@partial</span>(jax.vmap, in_axes<span class="op">=</span>(<span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="va">None</span>))  <span class="co"># map over gaussians</span></span>
 <span id="cb2-4"><a href="#cb2-4"></a><span class="kw">def</span> compute_gaussians(mu, theta, scaling, coord):</span>
@@ -257,9 +260,9 @@ G(x)=\exp\left(-\dfrac{1}{2}(x-\mu)^T\Sigma^{-1}(x-\mu)\right)
 <span id="cb2-18"><a href="#cb2-18"></a>    Sigma <span class="op">=</span> R <span class="op">@</span> S <span class="op">@</span> S <span class="op">@</span> R.T <span class="op">+</span> <span class="fl">1e-6</span> <span class="op">*</span> jnp.eye(<span class="dv">2</span>)</span>
 <span id="cb2-19"><a href="#cb2-19"></a>    diff <span class="op">=</span> coord <span class="op">-</span> mu</span>
 <span id="cb2-20"><a href="#cb2-20"></a>    exponent <span class="op">=</span> <span class="op">-</span><span class="fl">0.5</span> <span class="op">*</span> diff <span class="op">@</span> jnp.linalg.inv(Sigma) <span class="op">@</span> diff.T</span>
-<span id="cb2-21"><a href="#cb2-21"></a>    <span class="cf">return</span> jnp.exp(exponent)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb2-21"><a href="#cb2-21"></a>    <span class="cf">return</span> jnp.exp(exponent)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>With <code>compute_gaussians</code> implemented, it is easy to finish the rendering function. It basically computes a weighted average of all Gaussian colors for each pixel. <code>@jax.jit</code> is needed to compile and accelerate the rendering call.</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1"></a><span class="at">@jax.jit</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1"></a><span class="at">@jax.jit</span></span>
 <span id="cb3-2"><a href="#cb3-2"></a><span class="kw">def</span> render_image(mu_array, theta_array, scaling_array, color_array, coords):</span>
 <span id="cb3-3"><a href="#cb3-3"></a>    <span class="co">"""Render the image from the parameters."""</span></span>
 <span id="cb3-4"><a href="#cb3-4"></a>    gaussians <span class="op">=</span> compute_gaussians(mu_array, theta_array, scaling_array, coords)</span>
@@ -267,7 +270,7 @@ G(x)=\exp\left(-\dfrac{1}{2}(x-\mu)^T\Sigma^{-1}(x-\mu)\right)
 <span id="cb3-6"><a href="#cb3-6"></a>    rendered_image <span class="op">=</span> jnp.matmul(gaussians, color_array) <span class="op">/</span> (</span>
 <span id="cb3-7"><a href="#cb3-7"></a>        jnp.<span class="bu">sum</span>(gaussians, axis<span class="op">=-</span><span class="dv">1</span>, keepdims<span class="op">=</span><span class="va">True</span>) <span class="op">+</span> <span class="fl">1e-6</span></span>
 <span id="cb3-8"><a href="#cb3-8"></a>    )</span>
-<span id="cb3-9"><a href="#cb3-9"></a>    <span class="cf">return</span> jnp.clip(rendered_image, <span class="dv">0</span>, <span class="dv">255</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb3-9"><a href="#cb3-9"></a>    <span class="cf">return</span> jnp.clip(rendered_image, <span class="dv">0</span>, <span class="dv">255</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>The image below illustrates the rendering of two random Gaussians. Notice how colors blend at the intersection. High-quality image rendering typically utilizes tens of thousands of Gaussians.</p>
 <p><img src="gs.png" class="img-fluid"></p>
 <p><code>render_image</code> is implemented in a differentiable way. We can compute the loss by comparing the reconstructed image against the target image. Either <span class="math inline">\(L_1\)</span> loss or MSE will work. It is now straightforward to implement the training loop in the <code>main</code> function. We can summarize the training code as follows:</p>
@@ -280,7 +283,7 @@ G(x)=\exp\left(-\dfrac{1}{2}(x-\mu)^T\Sigma^{-1}(x-\mu)\right)
 <li>update gaussian parameters</li>
 </ul></li>
 </ul>
-<div class="sourceCode" id="cb4"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1"></a>_SIZE <span class="op">=</span> <span class="dv">128</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1"></a>_SIZE <span class="op">=</span> <span class="dv">128</span></span>
 <span id="cb4-2"><a href="#cb4-2"></a>_ITERATIONS <span class="op">=</span> <span class="dv">1000</span></span>
 <span id="cb4-3"><a href="#cb4-3"></a>_GS_INITIAL_NUM <span class="op">=</span> <span class="dv">5000</span></span>
 <span id="cb4-4"><a href="#cb4-4"></a></span>
@@ -322,7 +325,7 @@ G(x)=\exp\left(-\dfrac{1}{2}(x-\mu)^T\Sigma^{-1}(x-\mu)\right)
 <span id="cb4-40"><a href="#cb4-40"></a></span>
 <span id="cb4-41"><a href="#cb4-41"></a>    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(_ITERATIONS):</span>
 <span id="cb4-42"><a href="#cb4-42"></a>        params, opt_state <span class="op">=</span> update(params, opt_state)</span>
-<span id="cb4-43"><a href="#cb4-43"></a>        current_loss <span class="op">=</span> loss_fn(params)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb4-43"><a href="#cb4-43"></a>        current_loss <span class="op">=</span> loss_fn(params)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>You can find the complete code in <a href="https://github.com/tomondev/image-gs-toy-example"><img src="https://img.shields.io/static/v1.svg?logo=github&amp;label=Repo&amp;message=View%20On%20Github&amp;color=lightgrey" class="img-fluid" alt="View filled on Github"></a></p>
 </section>
 <section id="target-image" class="level2">
@@ -402,13 +405,14 @@ G(x)=\exp\left(-\dfrac{1}{2}(x-\mu)^T\Sigma^{-1}(x-\mu)\right)
       e.clearSelection();
     }
     const getTextToCopy = function(trigger) {
-        const codeEl = trigger.previousElementSibling.cloneNode(true);
-        for (const childEl of codeEl.children) {
-          if (isCodeAnnotation(childEl)) {
-            childEl.remove();
-          }
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
         }
-        return codeEl.innerText;
+      }
+      return codeEl.innerText;
     }
     const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
       text: getTextToCopy

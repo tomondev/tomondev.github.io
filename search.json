@@ -1,17 +1,17 @@
 [
   {
+    "objectID": "about.html",
+    "href": "about.html",
+    "title": "About",
+    "section": "",
+    "text": "My name is Tom. I write small examples on various interesting topics.\nIf you find mistakes in my posts, please file issues."
+  },
+  {
     "objectID": "index.html",
     "href": "index.html",
     "title": "On Notes",
     "section": "",
-    "text": "Date\n\n\n\nTitle\n\n\n\nAuthor\n\n\n\n\n\n\n\n\nAug 1, 2025\n\n\nA Toy Example of 2D Gaussian Splatting in JAX\n\n\nTom \n\n\n\n\n\n\nJan 1, 2025\n\n\nDiffusion Reverse Samplers Approximate Gaussian Distributions\n\n\nTom \n\n\n\n\n\n\nNo matching items"
-  },
-  {
-    "objectID": "posts/diffusion_reverse_sampler_gaussian/index.html",
-    "href": "posts/diffusion_reverse_sampler_gaussian/index.html",
-    "title": "Diffusion Reverse Samplers Approximate Gaussian Distributions",
-    "section": "",
-    "text": "In diffusion models, let’s assume that \\(x_0\\) is the data sample (for example, an image) and \\(x_T\\) is the noise. The forward process is defined as \\[\nx_t = x_{t-1} + z_{t-1}\n\\] where \\(z_{t-1}\\) is independent Gaussian noise \\(\\mathcal{N}(0, \\sigma^2)\\).\nThe construction of a reverse sampler relies on a key property: for small \\(\\sigma\\) values, the conditional distribution \\(p(x_{t-1}|x_t)\\) closely approximates a Gaussian distribution. In this post, we will write a small experiment to verify this property.\nLet’s assume that \\(p(x_{t-1})\\) is a non-trivial distribution, for example, a mixture of two Gaussian distributions: \\(\\mathcal{N}(x|\\mu_1,\\sigma_1^2)\\) and \\(\\mathcal{N}(x|\\mu_2,\\sigma_2^2)\\) with equal weights. The pdf of \\(x_{t-1}\\) can be written as \\[\np(x) = \\dfrac{1}{2}\\dfrac{1}{(2\\pi\\sigma_1^2)^{1/2}}\\exp \\left\\{-\\dfrac{1}{2\\sigma_1^2}(x-\\mu_1)^2\\right\\} + \\dfrac{1}{2}\\dfrac{1}{(2\\pi\\sigma_2^2)^{1/2}}\\exp \\left\\{-\\dfrac{1}{2\\sigma_2^2}(x-\\mu_2)^2\\right\\}\n\\] Let’s use \\(\\mu_1=1, \\sigma_1=0.6\\) and \\(\\mu_2=2, \\sigma_2=0.2\\). The pdf looks like this:\n\nAccording to eq(1), we also know that the conditional distribution \\(p(x_t|x_{t-1})\\) is just a Gaussian. We are interested in the conditional distribution \\(p(x_{t-1}|x_{t})\\). According to Bayes’ rule, it can be written as: \\[\np(x_{t-1}|x_t) = \\dfrac{p(x_{t}|x_{t-1})p(x_{t-1})}{\\int p(x_{t}|x_{t-1})p(x_{t-1})dx_{t-1}}\n\\] We already know \\(p(x_t|x_{t-1})\\) and \\(p(x_{t-1})\\), so the only thing we need to figure out is the denominator. But notice that the denominator is a constant with respect to \\(x_{t-1}\\). Therefore, we can just look at the numerator to see how close it is to a Gaussian distribution. Below, we plot the unnormalized pdf defined by the numerator at different \\(\\sigma\\) values:\nWe fix \\(x_{t}=1\\) and set \\(\\sigma\\) to 0.5, 0.3, and 0.1. At 0.1, the reverse conditional distribution is almost the same as a Gaussian.\n\nCurious readers can find the mathematical proof in 2406.08929."
+    "text": "Date\n\n\n\nTitle\n\n\n\nAuthor\n\n\n\n\n\n\n\n\nAug 1, 2025\n\n\nA Toy Example of 2D Gaussian Splatting in JAX\n\n\nTom \n\n\n\n\n\n\nNo matching items"
   },
   {
     "objectID": "posts/image-2dgs/index.html",
@@ -54,12 +54,5 @@
     "title": "A Toy Example of 2D Gaussian Splatting in JAX",
     "section": "Important Notes",
     "text": "Important Notes\nThe current implementation is inefficient and overly simplistic. Improvements can be made in the following aspects:\nTo enhance efficiency, we can avoid evaluating all Gaussians for every pixel. Gaussians located far from a pixel contribute negligibly to its color. A more efficient approach involves selecting the K Gaussians with the highest density at a given pixel. However, identifying and managing K Gaussians for each individual pixel might be too resource-intensive. A more pragmatic solution is to generate K Gaussians for a specific tile, while ensuring that Gaussians spanning multiple tiles are managed appropriately.\nIt is not optimal to initialize the Gaussians randomly. Instead, we can initialize the geometry and color of the Gaussians according to pixel intensity and gradients in the target image. This will likely lead to faster convergence and better reconstruction quality.\nLast but not least, the number of Gaussians doesn’t have to be fixed. In each iteration, we can remove some Gaussians whose contributions are negligible and create new Gaussians at pixels where reconstruction errors are high.\nTo summarize, this is a basic example that illustrates how Gaussian splatting works. Many improvements can be added to render a high-quality image more efficiently."
-  },
-  {
-    "objectID": "about.html",
-    "href": "about.html",
-    "title": "About",
-    "section": "",
-    "text": "My name is Tom. I write small examples on various interesting topics.\nIf you find mistakes in my posts, please file issues."
   }
 ]
