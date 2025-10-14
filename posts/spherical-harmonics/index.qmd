@@ -1,6 +1,6 @@
 ---
-title: "Spherical Harmonics and 3D Gaussian Splatting Rendering"
-date: 2025-09-01
+title: "Spherical Harmonics: Visualization and Applications"
+date: 2025-02-01
 author: Tom
 ---
 

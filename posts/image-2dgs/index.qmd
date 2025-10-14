@@ -1,6 +1,6 @@
 ---
-title: "A Toy Example of 2D Gaussian Splatting in JAX"
-date: 2025-08-01
+title: "2D Gaussian Splatting and Image Rendering"
+date: 2025-01-01
 author: Tom
 ---
 

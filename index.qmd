@@ -7,6 +7,11 @@ listing:
   categories: false
   sort-ui: false
   filter-ui: false
+  fields: [date, title]
+  field-display-names:
+    title: "Posts"
+  date-format: "MMMM, YYYY"
+    
 page-layout: full
 title-block-banner: true
 ---
