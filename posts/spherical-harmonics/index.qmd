@@ -34,13 +34,13 @@ where:
 
 Notice that SH are complex-valued functions. Using the definition above, we can derive $Y_l^m$ for any given $l$ and $m$. For example:
 
-### $l=0$
+$l=0$
 
 $$
 Y_0^0(\theta, \varphi) = \frac{1}{2}\sqrt{\frac{1}{\pi}}
 $$
 
-### $l=1$
+$l=1$
 
 $$
 \begin{align}
@@ -50,7 +50,7 @@ Y_1^1(\theta, \varphi) &= -\frac{1}{2}\sqrt{\frac{3}{2\pi}} \cdot \mathrm{e}^{i\
 \end{align}
 $$
 
-### $l=2$
+$l=2$
 
 $$
 \begin{align}
