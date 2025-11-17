@@ -24,3 +24,43 @@ In this section, we will use a simple example to test the rendering effect. We w
 
 
 
+```
+ I want to rasterize 3D Gaussian splats. Generate JAX code for each of the steps:
+1. Scene Representation and Camera Setup
+2. Projection and 2D Covariance Calculation
+3. Gaussian Sorting (Depth Ordering)
+4. Tile-Based Rasterization and Frustum Culling
+5. Accumulation and Blending
+
+Assume each Gaussian has the following property:
+1. x,y,z represent the position
+2. nx,ny,nz represent the normal
+3. f_dc_0, f_dc_1, f_dc_2 represent the RGB color
+4. opacity represents the transparency
+5. scale_0, scale_1, scale_2 represent the scaling of the Gaussian along its local axes
+6. rot_0, rot_1, rot_2, rot_3 represent the rotation as a quaternion
+PlyProperty('x', 'float'),
+ PlyProperty('y', 'float'),
+ PlyProperty('z', 'float'),
+ PlyProperty('nx', 'float'),
+ PlyProperty('ny', 'float'),
+ PlyProperty('nz', 'float'),
+ PlyProperty('f_dc_0', 'float'),
+ PlyProperty('f_dc_1', 'float'),
+ PlyProperty('f_dc_2', 'float'),
+ PlyProperty('f_rest_0', 'float'),
+ PlyProperty('f_rest_1', 'float'),
+ PlyProperty('f_rest_2', 'float'),
+ PlyProperty('opacity', 'float'),
+ PlyProperty('scale_0', 'float'),
+ PlyProperty('scale_1', 'float'),
+ PlyProperty('scale_2', 'float'),
+ PlyProperty('rot_0', 'float'),
+ PlyProperty('rot_1', 'float'),
+ PlyProperty('rot_2', 'float'),
+ PlyProperty('rot_3', 'float'))
+
+
+
+```
+
